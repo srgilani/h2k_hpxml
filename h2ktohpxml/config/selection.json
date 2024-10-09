@@ -1,0 +1,328 @@
+{
+    "building_type": {
+        "address": {
+            "h2k": "HouseFile,House,Specifications,_attributes,buildingType",
+            "hpxml": "N/A"
+        },
+        "map": {
+            "House": "house",
+            "Maison": "house",
+            "Multi-unit: one unit": "single-murb",
+            "Multilogement : une unité": "single-murb",
+            "Multi-unit: whole building": "whole-murb",
+            "Multilogement : bâtiment complet": "whole-murb"
+        },
+        "default": "house"
+    },
+    "azimuth_of_home": {
+        "address": {
+            "h2k": "HouseFile,House,Specifications,FacingDirection,English",
+            "hpxml": "HPXML,Building,BuildingDetails,BuildingSummary,Site,AzimuthOfFrontOfHome"
+        },
+        "map": {
+            "South": 180,
+            "Southeast": 135,
+            "East": 90,
+            "Northeast": 45,
+            "North": 0,
+            "Northwest": 315,
+            "West": 270,
+            "Southwest": 225
+        },
+        "default": 180
+    },
+    "window_direction": {
+        "address": {
+            "h2k": "Window,FacingDirection,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Windows,Window,Azimuth"
+        },
+        "map": {
+            "South": 180,
+            "Southeast": 135,
+            "East": 90,
+            "Northeast": 45,
+            "North": 0,
+            "Northwest": 315,
+            "West": 270,
+            "Southwest": 225
+        },
+        "default": 180
+    },
+    "shielding_of_home": {
+        "address": {
+            "h2k": "HouseFile,House,NaturalAirInfiltration,Specifications,LocalShielding,Walls,English",
+            "hpxml": "HPXML,Building,BuildingDetails,BuildingSummary,Site,ShieldingofHome"
+        },
+        "map": {
+            "None": "exposed",
+            "Light": "normal",
+            "Heavy": "well-shielded",
+            "Very heavy": "well-shielded",
+            "Complete (by large buildings)": "well-shielded"
+        },
+        "default": "well-shielded"
+        
+    },
+    "ground_conductivity": {
+        "address": {
+            "h2k": "HouseFile,House,Specifications,SoilCondition,English",
+            "hpxml": "HPXML,Building,BuildingDetails,BuildingSummary,Site,extension,GroundConductivity"
+        },
+        "map": {
+            "Normal conductivity (dry sand, loam, clay)": 0.491,
+            "High conductivity (moist soil)": 0.737,
+            "Perma-frost soil": 1.098
+        },
+        "default": 0.491,
+        "notes": "0.491 BTU/h∙ft∙°F = 0.85 W/mK | 0.737 BTU/h∙ft∙°F = 1.275 W/mK | 1.098 BTU/h∙ft∙°F = 1.9 W/mK"
+    },
+    "res_facility_type": {
+        "address": {
+            "h2k": "HouseFile,House,Specifications,HouseType,English",
+            "hpxml": "HPXML,Building,BuildingDetails,BuildingSummary,BuildingConstruction,ResidentialFacilityType"
+        },
+        "map": {
+            "Single Detached": "single-family detached",
+            "Double/Semi-detached": "single-family attached",
+            "Duplex (non-MURB)": "single-family attached",
+            "Triplex (non-MURB)": "single-family attached",
+            "Apartment (non-MURB)": "apartment unit",
+            "Row house, end unit": "single-family attached",
+            "Mobile Home": "single-family attached",
+            "Row house, middle unit": "single-family attached"
+        },
+        "murb_map": {
+            "Detached Duplex": "",
+            "Detached Triplex": "",
+            "Attached Duplex": "",
+            "Attached Triplex": "",
+            "Apartment": "",
+            "Apartment Row": ""
+        },
+        "default": "single-family detached"
+    },
+    "num_ag_storeys": {
+        "address": {
+            "h2k": "HouseFile,House,Specifications,Storeys,English",
+            "hpxml": "HPXML,Building,BuildingDetails,BuildingSummary,BuildingConstruction,NumberofConditionedFloorsAboveGrade"
+        },
+        "map": {
+            "One storey": 1,
+            "One and a half": 1.5,
+            "Two storeys": 2,
+            "Two and a half": 2.5,
+            "Three storeys": 3,
+            "Split level": 2,
+            "Split entry/Raised base.": 2
+        },
+        "default": 1
+    },
+    "roof_pitch": {
+        "address": {
+            "h2k": "Measurements,Slope,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Roofs,Roof,Pitch"
+        },
+        "map": {
+            "User specified": null,
+            "Flat roof": 0,
+            "2 / 12": 2,
+            "3 / 12": 3,
+            "4 / 12": 4,
+            "5 / 12": 5,
+            "6 / 12": 6,
+            "7 / 12": 7
+        },
+        "default": 4
+    },
+    "roof_material": {
+        "address": {
+            "h2k": "HouseFile,House,Specifications,RoofCavity,SlopedRoof,RoofingMaterial,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Roofs,Roof,RoofType"
+        },
+        "map": {
+            "User specified": "asphalt or fiberglass shingles",
+            "Asphalt shingles": "asphalt or fiberglass shingles",
+            "Metal roofing": "metal surfacing",
+            "Built-up membrane": "asphalt or fiberglass shingles",
+            "Asphalt roll roofing": "asphalt or fiberglass shingles",
+            "Wood shingles": "wood shingles or shakes",
+            "Crushed stone (not dried)": "concrete",
+            "Slate": "slate or tile shingles",
+            "Clay tile": "slate or tile shingles"
+        },
+        "hpxml_opts": [
+            "asphalt or fiberglass shingles", 
+            "wood shingles or shakes", 
+            "shingles", 
+            "slate or tile shingles", 
+            "metal surfacing", 
+            "plastic/rubber/synthetic sheeting", 
+            "expanded polystyrene sheathing", 
+            "concrete", 
+            "cool roof"
+        ],
+        "default": "asphalt or fiberglass shingles"
+    },
+    "basement_heated": {
+        "address": {
+            "h2k":"HouseFile,House,Temperatures,Basement,@heated",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Foundations,Foundation,FoundationType,Basement,Conditioned"
+        },
+        "map": {
+            "false":false,
+            "true":true
+        },
+        "default": true
+    },
+    "crawlspace_heated": {
+        "address": {
+            "h2k":"HouseFile,House,Temperatures,Crawlspace,@heated",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Foundations,Foundation,FoundationType,Crawlspace,Conditioned"
+        },
+        "map": {
+            "false":false,
+            "true":true
+        },
+        "default": true
+    },
+    "foundation_rectangular": {
+        "address": {
+            "h2k":"Floor,Measurements,@isRectangular",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Foundations,Foundation,FoundationType,Basement,Conditioned"
+        },
+        "map": {
+            "false":false,
+            "true":true
+        },
+        "default": true
+    },
+    "crawlspace_vented": {
+        "address": {
+            "h2k":"VentilationType,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Foundations,Foundation,FoundationType,Crawlspace,Conditioned"
+        },
+        "map": {
+            "Vented": "crawlspace - vented",
+            "Open": "outside",
+            "Closed": "crawlspace - unvented"
+        },
+        "default": "crawlspace - vented"
+    },
+    "code_selector_window_glazing": {
+        "address": {
+            "h2k": "Layers,GlazingType,@code",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Windows,Window,GlassLayers"
+        },
+        "map": {
+            "1": "single-pane",
+            "2": "double-pane",
+            "3": "triple-pane",
+            "4": "triple-pane",
+            "5": "double-pane",
+            "6": "double-pane",
+            "7": "double-pane",
+            "8": "double-pane"
+        },
+        "hpxml_opts": [
+            "single-pane", 
+            "double-pane", 
+            "triple-pane",
+            "glass block"
+        ],
+        "default": "single-pane"
+    },
+    "code_selector_window_frame_mat": {
+        "address": {
+            "h2k": "Layers,FrameMaterial,@code",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Windows,Window,FrameType"
+        },
+        "map": {
+            "0": "Aluminum",
+            "1": "Aluminum",
+            "2": "Wood",
+            "3": "Wood",
+            "4": "Vinyl",
+            "5": "Vinyl",
+            "6": "Fiberglass"
+        },
+        "hpxml_opts": [
+            "Aluminum", 
+            "Fiberglass", 
+            "Metal", 
+            "Vinyl",
+            "Wood"
+        ],
+        "default": "Vinyl"
+    },
+    "code_selector_window_thermal_break": {
+        "address": {
+            "h2k": "Layers,SpacerType,@code",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Windows,Window,FrameType"
+        },
+        "map": {
+            "0": false,
+            "1": false,
+            "2": true,
+            "3": true
+        },
+        "hpxml_opts": [
+            true,
+            false
+        ],
+        "default": "Vinyl"
+    },
+    "code_selector_window_coat_tint": {
+        "address": {
+            "h2k": "Layers,CoatingsTint,@code",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Windows,Window,GlassType"
+        },
+        "map": {
+            "0": "clear",
+            "1": "low-e, low-solar-gain",
+            "2": "low-e, low-solar-gain",
+            "3": "low-e, high-solar-gain",
+            "4": "low-e, high-solar-gain",
+            "5": "tint",
+            "6": "low-e, low-solar-gain",
+            "7": "low-e, low-solar-gain",
+            "8": "low-e, high-solar-gain",
+            "9": "low-e, high-solar-gain",
+            "A": "reflective",
+            "B": "tinted/reflective"
+        },
+        "hpxml_opts": [
+            "clear",
+            "low-e",
+            "low-e, high-solar-gain",
+            "low-e, low-solar-gain",
+            "tinted",
+            "tinted/reflective",
+            "reflective"
+        ],
+        "default": "clear"
+    },
+    "code_selector_window_gas_fill": {
+        "address": {
+            "h2k": "Layers,FillType,@code",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Windows,Window,GasFill"
+        },
+        "map": {
+            "0": "air",
+            "1": "air",
+            "2": "air",
+            "3": "argon",
+            "4": "argon",
+            "5": "argon",
+            "6": "krypton"
+        },
+        "hpxml_opts": [
+            "air",
+            "argon",
+            "krypton",
+            "xenon",
+            "nitrogen",
+            "other"
+        ],
+        "default": "air"
+    }
+}
