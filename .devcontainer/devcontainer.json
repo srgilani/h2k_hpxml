@@ -30,5 +30,7 @@
                 "ms-python.python"
 			]
 		}
-	}
+	},
+  "remoteUser": "vscode",
+  "postCreateCommand": "/venv/bin/python -m venv /workspaces/h2k_hpxml/.venv && /workspaces/h2k_hpxml/.venv/bin/pip install -r /workspaces/h2k_hpxml/requirements.txt"
 }

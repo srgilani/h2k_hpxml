@@ -1,5 +1,6 @@
 # Use an official Python runtime as a parent image
 FROM canmet/os_standards_devcontainer:3.7.0
+# Install Python 3.12 as per Volta Development currently. 
 RUN : \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
