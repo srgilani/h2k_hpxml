@@ -1,5 +1,13 @@
 # Use an official Python runtime as a parent image
 FROM canmet/os_standards_devcontainer:3.7.0
+
+# Download and install https://github.com/NREL/OpenStudio-HPXML/releases/download/v1.7.0/OpenStudio-HPXML-v1.7.0.zip
+RUN curl -L -o OpenStudio-HPXML-v1.7.0.zip https://github.com/NREL/OpenStudio-HPXML/releases/download/v1.7.0/OpenStudio-HPXML-v1.7.0.zip \
+    && unzip OpenStudio-HPXML-v1.7.0.zip -d /OpenStudio-HPXML \
+    && rm OpenStudio-HPXML-v1.7.0.zip \
+    && chmod -R 777 /OpenStudio-HPXML
+
+
 # Install Python 3.12 as per Volta Development currently. 
 RUN : \
     && apt-get update \
