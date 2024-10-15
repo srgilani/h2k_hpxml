@@ -28,7 +28,13 @@
 				"KoichiSasada.vscode-rdbg",
 				"karyfoundation.idf",
                 "ms-python.python"
-			]
+			],
+			"settings": {
+                "files.associations": {
+                    "*.h2k": "xml",
+					"*.hpxml": "xml"
+                }
+            },
 		}
 	},
   "remoteUser": "vscode",
