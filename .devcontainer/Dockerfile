@@ -5,7 +5,7 @@ ARG OPENSTUDIO_HPXML_VERSION=1.7.0
 ARG PYTHON_VERSION=3.12
 
 # Download and install OpenStudio-HPXML and install Python with virtual environment
-RUN curl -L -o OpenStudio-HPXML-v${OPENSTUDIO_HPXML_VERSION}.zip https://github.com/NREL/OpenStudio-HPXML/releases/download/v${OPENSTUDIO_HPXML_VERSION}/OpenStudio-HPXML-v${OPENSTUDIO_HPXML_VERSION}.zip \
+RUN curl -k -L -o OpenStudio-HPXML-v${OPENSTUDIO_HPXML_VERSION}.zip https://github.com/NREL/OpenStudio-HPXML/releases/download/v${OPENSTUDIO_HPXML_VERSION}/OpenStudio-HPXML-v${OPENSTUDIO_HPXML_VERSION}.zip \
     && unzip OpenStudio-HPXML-v${OPENSTUDIO_HPXML_VERSION}.zip -d / \
     && rm OpenStudio-HPXML-v${OPENSTUDIO_HPXML_VERSION}.zip \
     && chmod -R 777 /OpenStudio-HPXML \
