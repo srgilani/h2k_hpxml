@@ -136,15 +136,26 @@ def convert(input_path,
 
         path_to_log = f"{output_path}/run"
         # Run the OpenStudio simulation
-        result = subprocess.run(
-            f"openstudio {ruby_hpxml_path} -x {hpxml_path} {flags}",
-            cwd=config.get("paths", "hpxml_os_path"),
-            check=True
-        )
-
-        print("Simulation result:", result)
+        command = [
+            f"/usr/local/bin/openstudio",
+            ruby_hpxml_path,
+            "-x",
+            hpxml_path,
+        ]
+        try:
+            print("Running simulation...")
+            result = subprocess.run(
+                command,
+                cwd=hpxml_os_path,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            print("Simulation result:", result)
+        except subprocess.CalledProcessError as e:
+            print("Error during simulation:", e.stderr)
         
-        print("================================================")
+        
 
 
 

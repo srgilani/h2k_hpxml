@@ -67,7 +67,8 @@ def get_cwec_file(weather_region,
     epw_file = os.path.join(os.path.join(weather_folder), f"{zip_file[:-4]}.epw")
     if os.path.exists(epw_file):
         print(f"File already exists: {epw_file}")
-        return epw_file
+        
+        return os.path.join(weather_folder, f"{zip_file[:-4]}")
 
     # Download the file from github 
     github_url = f"https://github.com/canmet-energy/btap_weather/raw/refs/heads/main/historic/"
@@ -90,7 +91,9 @@ def get_cwec_file(weather_region,
             if file.endswith('.epw'):
                 zip_ref.extract(file, extract_path)
                 print(f"Extracted {file} to {extract_path}")
-    return epw_file
+
+    print(f"Downloaded and extracted {zip_file} to {epw_file}")
+    return os.path.join(extract_path, f"{zip_file[:-4]}")
 
 
     
