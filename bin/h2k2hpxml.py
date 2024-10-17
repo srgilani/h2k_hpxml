@@ -13,7 +13,6 @@ from colorama import Fore, Style
 import pyfiglet
 import random
 
-
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.group(context_settings=CONTEXT_SETTINGS)
 # This should match the version of OSHPXML with a suffix for our CLI version
@@ -129,7 +128,7 @@ def run(input_path,
         hpxml_string = h2ktohpxml(h2k_string)
         
         # Define the output path for the converted HPXML file
-        hpxml_path = os.path.join(dest_hpxml_path, pathlib.Path(filepath).stem + ".xml")
+        hpxml_path = os.path.join(dest_hpxml_path, pathlib.Path(filepath).stem, pathlib.Path(filepath).stem + ".xml")
 
         # Ensure the output directory exists
         os.makedirs(os.path.dirname(hpxml_path), exist_ok=True)
