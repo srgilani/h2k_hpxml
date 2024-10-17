@@ -4,13 +4,14 @@ import sys
 # Avoid having to add PYTHONPATH to env.
 PROJECT_ROOT = str(pathlib.Path(os.path.dirname(os.path.realpath(__file__))).parent.absolute())
 sys.path.append(PROJECT_ROOT)
-
 import configparser
 import subprocess
 import click
-import colorama
 from  h2ktohpxml.h2ktohpxml import h2ktohpxml
 from configparser import NoOptionError, NoSectionError
+from colorama import Fore, Style
+import pyfiglet
+import random
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -23,9 +24,6 @@ def cli():
 
 @cli.command(help=f"People that worked on this.")
 def credits():
-    from colorama import Fore, Style
-    import pyfiglet
-    import random
     print(Fore.GREEN + "H2K to HPXML Team" + Style.RESET_ALL)
     colors = [Fore.RED,
               Fore.GREEN,
