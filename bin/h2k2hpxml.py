@@ -15,13 +15,11 @@ from configparser import NoOptionError, NoSectionError
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.group(context_settings=CONTEXT_SETTINGS)
+# This should match the version of OSHPXML with a suffix for our CLI version
 @click.version_option(version='1.7.0.1')
-
-
 
 def cli():
     pass
-
 
 @cli.command(help=f"People that worked on this.")
 def credits():
@@ -43,7 +41,7 @@ def credits():
     ]:
         print(random.choice(colors) + pyfiglet.figlet_format(x) + Fore.RESET)
 
-@cli.command(help="Convert H2K files to HPXML format.")
+@cli.command(help="Convert and Simulate H2K file to OS/E+.")
 @click.option('--input_path','-i', default=os.path.join(PROJECT_ROOT,'cli','input'), help='h2k file or folder containing h2k files.')
 @click.option('--output_path','-o', default=os.path.join(PROJECT_ROOT,'cli','output'), help='Path to output hpxml files.')
 @click.option('--timestep', multiple=True, default=[], help='Request monthly output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
@@ -53,12 +51,11 @@ def credits():
 @click.option('--add-component-loads','-l', is_flag=True, default=True, help='Add component loads.')
 @click.option('--debug','-d',  is_flag=True, default=False, help='Enable debug mode.')
 @click.option('--skip-validation','-s',  is_flag=True, default=False, help='Skip Schema/Schematron validation for faster performance')
-@click.option('--output-format','-f', default='csv', help='Output format for the simulation results. Options are json and csv_dview. Defaults to csv_dview.')
+@click.option('--output-format','-f', default='csv', help='Output format for the simulation resultsOutput file format type (csv, json, msgpack, csv_dview)')
 @click.option('--add-stochastic-schedules',  is_flag=True, default=False, help='Add detailed stochastic occupancy schedules')
 @click.option('--add-timeseries-output-variable', multiple=True, default=[], help='Add timeseries output variable; can be called multiple times; can be called multiple times')
-
-
-def convert(input_path,
+@click.option('--do-not-sim',  is_flag=True, default=False, help='Convert only, do not run simulation')
+def run(input_path,
             output_path,
             timestep,
             daily,
@@ -69,7 +66,8 @@ def convert(input_path,
             skip_validation,
             output_format,
             add_stochastic_schedules,
-            add_timeseries_output_variable):
+            add_timeseries_output_variable,
+            do_not_sim):
     """
     Convert H2K files to HPXML format based on the provided configuration file.
 
@@ -78,7 +76,6 @@ def convert(input_path,
     """
 
     # Ensure that only one of the hourly, monthly or timeseries options is provided
-    print(sum(bool(x) for x in [hourly, monthly, timestep]))
     if sum(bool(x) for x in [hourly, monthly, timestep]) > 1:
         raise ValueError("Only one of the options --hourly, --monthly, or --timestep can be provided at a time.")
 
@@ -145,103 +142,36 @@ def convert(input_path,
         with open(hpxml_path, "w") as f:
             f.write(hpxml_string)
 
-        # Pause 3 seconds
-        import time
-        time.sleep(3)
+        if not do_not_sim:
+            # Pause 3 seconds
+            import time
+            time.sleep(3)
 
-        path_to_log = f"{output_path}/run"
-        # Run the OpenStudio simulation
-        command = [
-            f"/usr/local/bin/openstudio",
-            ruby_hpxml_path,
-            "-x",
-            hpxml_path
-        ]
-        
-        # Convert flags to a list of strings
-        flags = flags.split()
-        command.extend(flags)
-        
-        try:
-            print("Running simulation...")
-            result = subprocess.run(
-                command,
-                cwd=hpxml_os_path,
-                check=True,
-                capture_output=True,
-                text=True
-            )
-            print("Simulation result:", result)
-        except subprocess.CalledProcessError as e:
-            print("Error during simulation:", e.stderr)
-        
-        
-
-
-
-
-
-
-
+            path_to_log = f"{output_path}/run"
+            # Run the OpenStudio simulation
+            command = [
+                f"/usr/local/bin/openstudio",
+                ruby_hpxml_path,
+                "-x",
+                hpxml_path
+            ]
             
-
-@cli.command(help="Convert H2K files to HPXML format.")
-@click.option('--input_path','-i', default=os.path.join(PROJECT_ROOT,'cli','input'), help='h2k file or folder containing h2k files.')
-@click.option('--output_path','-o', default=os.path.join(PROJECT_ROOT,'cli','output'), help='Path to output hpxml files.')
-# @click.option('--hourly','-h', multiple=True, default=['ALL'], help='Output variables for hourly data. Defaults to ALL.')
-# @click.option('--monthly','-m', multiple=True, default=['fuels','temperature'], help='Monthly data to output. Defaults to fuels and temperature.')
-# @click.option('--add-component-loads','-l', is_flag=True, default=True, help='Add component loads.')
-# @click.option('--debug','-d',  is_flag=True, default=True, help='Enable debug mode.')
-def convert_and_run(input_path, output_path):
-    config = configparser.ConfigParser()
-    config.read(os.path.join(PROJECT_ROOT, 'conversionconfig.ini'))
-    hpxml_os_path = config.get("paths", "hpxml_os_path")
-
-    # Initialize the config parser and read the configuration file
-    config = configparser.ConfigParser()
-    config.read(os.path.join(PROJECT_ROOT,'conversionconfig.ini'))
-    
-    # Get source and destination paths from the configuration
-    source_h2k_path = input_path
-    dest_hpxml_path = output_path
-
-    # Determine if the source path is a single file or a directory of files
-    h2k_files = [source_h2k_path] if source_h2k_path.lower().endswith(".h2k") else [
-        os.path.join(source_h2k_path, x) for x in os.listdir(source_h2k_path)
-    ]
-
-
-    
-    # # Add the hourly and monthly options to the flags
-    # flags = ""
-    # if hourly:
-    #     flags += ' ' + ' '.join(f'--hourly {h}' for h in hourly)
-    # if monthly:
-    #     flags += ' ' + ' '.join(f'--monthly {m}' for m in monthly)
-    # if add_component_loads:
-    #     flags += ' --add-component-loads'
-    # if debug:
-    #     flags += ' --debug'
-    
-    # print("flags", flags)
-    # raise(flags)
-    flags = " --add-component-loads --debug"
-
-    path_to_log = f"{hpxml_os_path}/{input_path}/run"
-    success = False
-    result = {}
-
-    try:
-        result = subprocess.run(
-            f"openstudio workflow/run_simulation.rb -x {input_path} {flags}",
-            cwd=hpxml_os_path,
-            check=True
-        )
-        success = True
-    except subprocess.CalledProcessError:
-        print("Error in input file, check logs")
-    finally:
-        print({"result": result, "success": success, "path_to_log": path_to_log})
-
+            # Convert flags to a list of strings
+            flags = flags.split()
+            command.extend(flags)
+            
+            try:
+                print("Running simulation...")
+                result = subprocess.run(
+                    command,
+                    cwd=hpxml_os_path,
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+                print("Simulation result:", result)
+            except subprocess.CalledProcessError as e:
+                print("Error during simulation:", e.stderr)
+        
 if __name__ == '__main__':
     cli()
