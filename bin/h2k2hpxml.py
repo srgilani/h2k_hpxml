@@ -46,24 +46,30 @@ def credits():
 @cli.command(help="Convert H2K files to HPXML format.")
 @click.option('--input_path','-i', default=os.path.join(PROJECT_ROOT,'cli','input'), help='h2k file or folder containing h2k files.')
 @click.option('--output_path','-o', default=os.path.join(PROJECT_ROOT,'cli','output'), help='Path to output hpxml files.')
-@click.option('--weather_file','-w', default=os.path.join(PROJECT_ROOT,'cli','weather'), help='Path to output hpxml files.')
-@click.option('--timestep','-t', multiple=True, default=[], help='Output variables for hourly data. Defaults to ALL.')
-@click.option('--hourly','-h', multiple=True, default=[], help='Output variables for hourly data. Defaults to ALL.')
-@click.option('--monthly','-m', multiple=True, default=[], help='Monthly data to output. Defaults to fuels and temperature.')
+@click.option('--timestep', multiple=True, default=[], help='Request monthly output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
+@click.option('--daily', multiple=True, default=[], help='Request daily output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
+@click.option('--hourly', multiple=True, default=[], help='Request hourly output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
+@click.option('--monthly', multiple=True, default=[], help='Request monthly output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
 @click.option('--add-component-loads','-l', is_flag=True, default=True, help='Add component loads.')
-@click.option('--debug','-d',  is_flag=True, default=True, help='Enable debug mode.')
-@click.option('--output-format','-f', default='csv_dview', help='Path to output hpxml files.')
+@click.option('--debug','-d',  is_flag=True, default=False, help='Enable debug mode.')
+@click.option('--skip-validation','-s',  is_flag=True, default=False, help='Skip Schema/Schematron validation for faster performance')
+@click.option('--output-format','-f', default='csv', help='Output format for the simulation results. Options are json and csv_dview. Defaults to csv_dview.')
+@click.option('--add-stochastic-schedules',  is_flag=True, default=False, help='Add detailed stochastic occupancy schedules')
+@click.option('--add-timeseries-output-variable', multiple=True, default=[], help='Add timeseries output variable; can be called multiple times; can be called multiple times')
 
 
 def convert(input_path,
             output_path,
-            weather_file,
             timestep,
+            daily,
             hourly,
             monthly,
             add_component_loads,
             debug,
-            output_format):
+            skip_validation,
+            output_format,
+            add_stochastic_schedules,
+            add_timeseries_output_variable):
     """
     Convert H2K files to HPXML format based on the provided configuration file.
 
@@ -71,24 +77,33 @@ def convert(input_path,
         config_path (str): Path to the configuration file.
     """
 
+    # Ensure that only one of the hourly, monthly or timeseries options is provided
+    print(sum(bool(x) for x in [hourly, monthly, timestep]))
+    if sum(bool(x) for x in [hourly, monthly, timestep]) > 1:
+        raise ValueError("Only one of the options --hourly, --monthly, or --timestep can be provided at a time.")
 
     # Create string with all the flags
     flags = ""
-    if hourly:
-        flags += ' ' + ' '.join(f'--hourly {h}' for h in hourly)
-    if monthly:
-        flags += ' ' + ' '.join(f'--monthly {m}' for m in monthly)
     if add_component_loads:
-        flags += ' --add-component-loads'
+        flags += " --add-component-loads"
     if debug:
-        flags += ' --debug'
+        flags += " --debug"
     if output_format:
-        flags += ' --output-format ' + output_format
-    print("flags", flags)
-
-
-
-
+        flags += f" --output-format {output_format}"
+    if timestep:
+        flags += " " + " ".join(f"--timestep {t}" for t in timestep)
+    if hourly:
+        flags += " " + " ".join(f"--hourly {h}" for h in hourly)
+    if monthly:
+        flags += " " + " ".join(f"--monthly {m}" for m in monthly)
+    if skip_validation:
+        flags += " --skip-validation"
+    if daily:
+        flags += " " + " ".join(f"--daily {d}" for d in daily)
+    if add_stochastic_schedules:
+        flags += " --add-stochastic-schedules"
+    if add_timeseries_output_variable:
+        flags += " " + " ".join(f"--add-timeseries-output-variable {v}" for v in add_timeseries_output_variable)
 
     # Initialize the config parser and read the configuration file
     config = configparser.ConfigParser()
@@ -105,7 +120,7 @@ def convert(input_path,
         os.path.join(source_h2k_path, x) for x in os.listdir(source_h2k_path)
     ]
 
-    #translate files to hpxml
+    # Translate files to hpxml
     # Process each H2K file
     for filepath in h2k_files:
         print("================================================")
@@ -130,7 +145,7 @@ def convert(input_path,
         with open(hpxml_path, "w") as f:
             f.write(hpxml_string)
 
-        #pause 3 seconds
+        # Pause 3 seconds
         import time
         time.sleep(3)
 
@@ -140,8 +155,13 @@ def convert(input_path,
             f"/usr/local/bin/openstudio",
             ruby_hpxml_path,
             "-x",
-            hpxml_path,
+            hpxml_path
         ]
+        
+        # Convert flags to a list of strings
+        flags = flags.split()
+        command.extend(flags)
+        
         try:
             print("Running simulation...")
             result = subprocess.run(

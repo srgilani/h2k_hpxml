@@ -6,7 +6,7 @@ import requests
 import zipfile
 import configparser
 
-# Load configuration file and get the hpxml_os_path, weather_vintage, and weather_type
+# Load configuration file and get the hpxml_os_path, weather_vintage, and weather_library
 config = configparser.ConfigParser()
 config_path = os.path.join(os.path.dirname(__file__),"..", "conversionconfig.ini")
 config.read("conversionconfig.ini")
@@ -28,16 +28,21 @@ prov_terr_codes = {
 }
 
 
-def get_cwec_file(weather_region, 
-                  weather_location, 
+def get_cwec_file(weather_region="ONTARIO", 
+                  weather_location="LONDON", 
                   weather_folder=os.path.join(config.get("paths", "hpxml_os_path"),"weather"),
                   weather_vintage=config.get("weather", "weather_vintage"),
-                  weather_type=config.get("weather", "weather_type"),
-                  suffix="CWEC2020"):
+                  weather_library=config.get("weather", "weather_library"),
+                  ):
+
+    weather_region = unidecode(weather_region).upper()
+    weather_location = unidecode(weather_location).upper()
+    weather_vintage = unidecode(weather_vintage).upper()
+    weather_library = unidecode(weather_library).lower()
 
     with open(
         os.path.join(
-            os.path.dirname(__file__),"..", "resources", "weather",f"{weather_type}.json"
+            os.path.dirname(__file__),"..", "resources", "weather",f"{weather_library}.json"
         ),
         "r",
     ) as f:
@@ -45,19 +50,17 @@ def get_cwec_file(weather_region,
     # returns the name of the file without the file extension (e.g. .epw)
     default_file = canadian_cwec_files[0]
 
-    weather_region = unidecode(weather_region)
-    weather_location = unidecode(weather_location)
+
     if weather_region not in prov_terr_codes.keys():
         print(f"Invalid weather region: {weather_region}")
-        print(f"Valid weather regions: {prov_terr_codes.keys()}")
+        print(f"Valid weather regions are: {prov_terr_codes.keys()}")
         return default_file
 
     prov_terr_code = prov_terr_codes[weather_region]
 
-    search_string = f"CAN_{prov_terr_code}_{weather_location}_{suffix}"
-    print('search_string', search_string)
+    search_string = f"CAN_{prov_terr_code}_{weather_location}_{weather_vintage}"
     # Find the closest match to the search_string in the canadian_cwec_files list
-    closest_match = difflib.get_close_matches(search_string, canadian_cwec_files, n=1, cutoff=0.0)
+    closest_match = difflib.get_close_matches(search_string.lower(), canadian_cwec_files, n=1, cutoff=0.0)
     if closest_match:
         zip_file =  closest_match[0]
     else:
@@ -80,7 +83,6 @@ def get_cwec_file(weather_region,
     if response.status_code == 200:
         with open(local_filename, 'wb') as f:
             f.write(response.content)
-        print(f"Downloaded file to {local_filename}")
     else:
         raise Exception(f"Failed to download file from {file_url}, status code: {response.status_code}")
 
@@ -90,19 +92,7 @@ def get_cwec_file(weather_region,
         for file in zip_ref.namelist():
             if file.endswith('.epw'):
                 zip_ref.extract(file, extract_path)
-                print(f"Extracted {file} to {extract_path}")
-
-    print(f"Downloaded and extracted {zip_file} to {epw_file}")
     return os.path.join(extract_path, f"{zip_file[:-4]}")
-
-
-    
-
-
-
-
-
-
 
 
 def get_climate_zone(hdd):
