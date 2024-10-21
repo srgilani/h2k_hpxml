@@ -1,6 +1,8 @@
-# Openstudio-Standards development using VSCode. 
+# H2K-HPXML development using VSCode. 
 
-These are instructions on how to conduct development in the HPXML project, using development containers, and Visual Studio Code IDE. This method uses containers eliminate the need to install the correct version of python and other support tools required for development. It ensures that all developers are using the same consistent environment, same version of ruby and same toolchain. This help to avoid "It runs on my machine, but not yours" issues. The container is an Ubuntu linux based, and you can install linux console based applications if you wish. However, everything that you need for standards development is already included. 
+These are instructions on how to conduct development in the HPXML project, using development containers, and Visual Studio Code IDE. This method uses containers eliminate the need to install the correct version of python and other support tools required for development. It ensures that all developers are using the same consistent environment, same version of ruby and same toolchain. This help to avoid "It runs on my machine, but not yours" issues. The container is an Ubuntu linux based, and you can install linux console based applications if you wish. However, everything that you need for h2k-hpxml development is already included. 
+
+Another benefit is that simulations will run 50% faster using linux containers compared to Windows.
 
 
 ## Requirements
@@ -12,7 +14,7 @@ These are instructions on how to conduct development in the HPXML project, using
 Ensure that docker desktop is running on your system.  You should see it present in your windows task tray.  Then run the following command. 
 
 ```
-docker hello-world
+docker run hello-world
 ```
 
 You should see the following output.
@@ -47,7 +49,7 @@ For more examples and ideas, visit:
 ```
 
 ### Visual Studio Code
-[Visual Studio Code](https://code.visualstudio.com/) is an free to use editor that has a variety of publically created plug-ins. Some even support OpenStudio and EnergyPlus development. Click on the link above and install in on your computer. 
+[Visual Studio Code](https://code.visualstudio.com/) is an free to use editor that has a variety of publically created plug-ins. Some even support OpenStudio and EnergyPlus development which are included in this devcontainer by default. Click on the link above and install in on your computer. 
 ## Configuration
 1. Launch vscode and install the following extenstions. 
     * [Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
@@ -55,19 +57,21 @@ For more examples and ideas, visit:
 
 ## Development Workflow
 
-### Clone Standard Repository into a DevContainer
+### Clone H2K_HPXML Repository into a DevContainer
 This will create a container workspace and clone all the source code for openstudio-standards required for development.  
 1. Hit Ctrl+Shift+P to bring up the command pallet on the top of vscode. 
-1. Start to type "Dev Containers" and select " Dev Containers: Clone Repository in Container Volume" ![Clone](./images/CloneRepository.png "a title")
-1. Enter the URL for the openstudio-standards repository. ![URL](./images/URL.png "a title") For the nrcan branch use:
-`` https://github.com/NREL/openstudio-standards/tree/nrcan ``
-1. Wait a few minutes for the container to be created and to clone the source-code. 
+1. Start to type "Dev Containers" and select " Dev Containers: Clone Repository in Container Volume" 
+1. Enter the URL for the h2k_hpxml repository. For the main branch use:
+``` 
+https://github.com/canmet-energy/h2k_hpxml 
+```
+1. Wait a few minutes for the container to be created and to clone the source-code.
 
 ### Bring up a terminal to execute commands. 
-1. Hit Ctrl-Shift-`  (that is a backtick) to bring up a terminal. There are other ways to do this as well, such as the "Terminal Menu on the top or the "+" symbol to the right of the terminal on the bottom of vscode. You can now issue commands to the container.  
+1. Hit Ctrl-Shift-`  (that is a backtick, usually under the ~) to bring up a terminal. There are other ways to do this as well, such as the "Terminal Menu on the top or the "+" symbol to the right of the terminal on the bottom of vscode. You can now issue commands to the container.  
 
-### Install Certificates (NRCan Only)
-The NRCan network requires certificate to be installed in your container. Clone the cert repo. 
+### Install Certificates (NRCan Employees Only)
+Working at NRCan requires certificate to be installed in your container. Clone the cert repo with the command below. You need to request access from chris.kirney@nrcan.gc.ca 
 ```sh
 git clone https://github.com/canmet-energy/linux_nrcan_certs
 ```
@@ -84,16 +88,36 @@ pip install -r requirements.txt
 ``
 
 
-You are now ready for development! You can change branches, commit, push and pull from git. You can run bundle command to test the code as well from the terminal.
+You are now ready for development! You can change branches/fork, commit, push and pull from git. You can run bundle command to test the code as well from the terminal.
 
 ## Run Development Tests
-TBD
+Test are kept in the ***tests*** folder. To invoke all the tests in that folder, simple enter: 
+
+```
+pytests tests
+```
 
 
 ## Tips / Tricks
 ### Copy files to/from host into your workspace folder. 
-You can use the CTRL+C, CTRL-V to cut as paste to/from your host(windows) machine. 
+You can use the CTRL+C, CTRL-V to cut as paste to/from your host(windows) machine. You can also drag and drop files using the vscode folder Explorer.
 
+## Workflow
+While you can invoke the translator directly via code, you can also use the command line to translate and run the h2k files. 
+
+1. Place h2k files into the cli/input folder
+2. Type the following python command to translate and run the h2k files. 
+```
+python ./bin/h2k2hpxml run
+```
+Note: You can examine all the switches available by issuing the command: 
+```
+python ./bin/h2k2hpxml run -h
+``` 
+
+3.  By default it is in the cli/output folder unless redirected using the output switch. It will create a folder based on the name of the original h2k filename. The folder will contain
+ * **the hpxml file**: designated by the .xml extension, and all the conventional. 
+ * **the energy plus files**: this includes the idf, and htm and msgpack files.  ***By default the oshpxml does not produce the sqlite files or the osm files, To enable this, add the --debug flag to the run command.***
 
 
 
