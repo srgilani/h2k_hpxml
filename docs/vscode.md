@@ -105,17 +105,20 @@ You can use the CTRL+C, CTRL-V to cut as paste to/from your host(windows) machin
 ## Workflow
 While you can invoke the translator directly via code, you can also use the command line to translate and run the h2k files. 
 
-1. Place h2k files into the cli/input folder
+1. Place h2k files into any folder in the project. There is an example folder with two files you can try out here in 
+```
+/workspaces/h2k_hpxml/examples
+```
 2. Type the following python command to translate and run the h2k files. 
 ```
-python ./bin/h2k2hpxml run
+python ./bin/h2k2hpxml.py run -i /workspaces/h2k_hpxml/examples
 ```
 Note: You can examine all the switches available by issuing the command: 
 ```
 python ./bin/h2k2hpxml run -h
 ``` 
 
-3.  By default it is in the cli/output folder unless redirected using the output switch. It will create a folder based on the name of the original h2k filename. The folder will contain
+3.  By default the output is in the same folder provided, unless redirected using the output switch. It will create an output folder based on the name of the original h2k filename. The folder will contain
  * **the hpxml file**: designated by the .xml extension, and all the conventional. 
  * **the energy plus files**: this includes the idf, and htm and msgpack files.  ***By default the oshpxml does not produce the sqlite files or the osm files, To enable this, add the --debug flag to the run command.***
 
