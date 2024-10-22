@@ -1,3 +1,4 @@
+#!venv/bin/python
 import pathlib
 import os
 import sys
@@ -7,8 +8,7 @@ sys.path.append(PROJECT_ROOT)
 import configparser
 import subprocess
 import click
-from  h2ktohpxml.h2ktohpxml import h2ktohpxml
-from configparser import NoOptionError, NoSectionError
+from h2ktohpxml.h2ktohpxml import h2ktohpxml
 from colorama import Fore, Style
 import pyfiglet
 import random
@@ -16,7 +16,7 @@ import random
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.group(context_settings=CONTEXT_SETTINGS)
 # This should match the version of OSHPXML with a suffix for our CLI version
-@click.version_option(version='1.7.0.1')
+@click.version_option(version='1.7.0.1.1')
 
 def cli():
     pass
