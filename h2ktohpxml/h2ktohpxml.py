@@ -33,7 +33,10 @@ def h2ktohpxml(h2k_string="", config={}):
     )  # To add a test adiabatic wall to check impact on loads
 
     # ================ 1. Load template HPXML file ================
-    with open("./h2ktohpxml/templates/base.xml", "r", encoding="utf-8") as f:
+    base_hpxml_path = os.path.join(
+        os.path.dirname(__file__), "templates", "base.xml"
+    )
+    with open(base_hpxml_path, "r", encoding="utf-8") as f:
         base_hpxml = f.read()
 
     # ================ 1.a Parse xml ================
