@@ -1,17 +1,20 @@
 # Utility functions related to H2k mapping
 import json
+import os
+import sys
 from operator import itemgetter
 
 from . import obj
 from . import units
 
-with open("./h2ktohpxml/config/selection.json", "r", encoding="utf-8") as f:
+config_folder = os.path.join(os.path.dirname(__file__),"..","config")
+with open(os.path.join(config_folder,"selection.json"), "r", encoding="utf-8") as f:
     selection_config = json.load(f)
 
-with open("./h2ktohpxml/config/numeric.json", "r", encoding="utf-8") as f:
+with open(os.path.join(config_folder,"numeric.json"), "r", encoding="utf-8") as f:
     numeric_config = json.load(f)
 
-with open("./h2ktohpxml/config/foundationconfig.json", "r", encoding="utf-8") as f:
+with open(os.path.join(config_folder,"foundationconfig.json"), "r", encoding="utf-8") as f:
     foundation_config = json.load(f)
 
 

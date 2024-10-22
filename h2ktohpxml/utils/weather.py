@@ -8,8 +8,11 @@ import configparser
 
 # Load configuration file and get the hpxml_os_path, weather_vintage, and weather_library
 config = configparser.ConfigParser()
-config_path = os.path.join(os.path.dirname(__file__),"..", "conversionconfig.ini")
-config.read("conversionconfig.ini")
+config_path = os.path.join(os.path.dirname(__file__),"..","..","conversionconfig.ini")
+if not os.path.exists(config_path):
+    raise FileNotFoundError(f"Configuration file not found at {config_path}")
+config.read(config_path)
+
 
 prov_terr_codes = {
     "BRITISH COLUMBIA": "BC",
