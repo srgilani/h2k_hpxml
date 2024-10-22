@@ -25,12 +25,12 @@ RUN curl -k -L -o H2K_HPXML_VERSION.zip https://github.com/canmet-energy/h2k_hpx
     && /venv/bin/pip install -r /h2k_hpxml/requirements.txt \
     && sed -i '1s/^/#!\/venv\/bin\/python\n/' /h2k_hpxml/bin/h2k2hpxml.py \
     && mkdir /host_dir \
-    && chmod -R 777 /host_dir
+    && chmod -R 777 /shared
 RUN echo -e '#!/bin/bash\n/h2k_hpxml/bin/h2k2hpxml.py "$@"' > /usr/bin/cli \
     && chmod +x /usr/bin/cli
 
 # To run 
-# docker run -v //c/<path_to_your_h2k_files>:/host image_name /h2k_hpxml/bin/h2k2hpxml.py
+# docker run -v //c/<path_to_your_h2k_files>:/shared image_name /h2k_hpxml/bin/h2k2hpxml.py
 
 # Set it to be the default python
 ENV PATH=/venv/bin:$PATH

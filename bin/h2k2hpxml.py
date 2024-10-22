@@ -32,14 +32,16 @@ def credits():
               Fore.BLUE
               ]
     for x in [
-        'Phylroy Lopex\n'
+        "Aidan Brookson\n",
         "Leigh St. Hilaire\n",
-        "Aidan Brookson\n"
+        'Chris Kirney\n',
+        'Phylroy Lopex\n'        
+        'Julia Purdy\n'
     ]:
         print(random.choice(colors) + pyfiglet.figlet_format(x) + Fore.RESET)
 
 @cli.command(help="Convert and Simulate H2K file to OS/E+.")
-@click.option('--input_path','-i', default=os.path.join(PROJECT_ROOT,'cli','input'), help='h2k file or folder containing h2k files.')
+@click.option('--input_path','-i', default=os.path.join(PROJECT_ROOT,'example'), help='h2k file or folder containing h2k files.')
 @click.option('--output_path','-o', help='Path to output hpxml files. By default it is the same as the input path with a folder named output created inside it.')
 @click.option('--timestep', multiple=True, default=[], help='Request monthly output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
 @click.option('--daily', multiple=True, default=[], help='Request daily output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
@@ -66,6 +68,7 @@ def run(input_path,
             add_timeseries_output_variable,
             do_not_sim):
     import shutil
+    import csv
     """
     Convert H2K files to HPXML format based on the provided configuration file.
 
@@ -125,70 +128,92 @@ def run(input_path,
         h2k_files = [source_h2k_path]
     elif os.path.isdir(source_h2k_path):
         h2k_files = [os.path.join(source_h2k_path, f) for f in os.listdir(source_h2k_path) if f.lower().endswith(".h2k")]
+        if not h2k_files:
+            print(f"No .h2k files found in the directory {source_h2k_path}.")
+            exit(1)
     else:
-        raise ValueError(f"The source path {source_h2k_path} is neither a .h2k file nor a directory containing .h2k files.")
-
-
-    # # Determine if the source path is a single file or a directory of files
-    # h2k_files = [source_h2k_path] if source_h2k_path.lower().endswith(".h2k") else [
-    #     os.path.join(source_h2k_path, x) for x in os.listdir(source_h2k_path)
-    # ]
+        print(f"The source path {source_h2k_path} is neither a .h2k file nor a directory.")
+        exit(1)
 
     # Translate files to hpxml
     # Process each H2K file
-    for filepath in h2k_files:
-        print("================================================")
-        print("Processing file:", filepath)
-        
-        # Read the content of the H2K file
-        with open(filepath, "r", encoding="utf-8") as f:
-            h2k_string = f.read()
-        
-        # Convert the H2K content to HPXML format
-        hpxml_string = h2ktohpxml(h2k_string)
-        
-        # Define the output path for the converted HPXML file
-        hpxml_path = os.path.join(dest_hpxml_path, pathlib.Path(filepath).stem, pathlib.Path(filepath).stem + ".xml")
+    import concurrent.futures
+    import time
 
-        # Ensure the output directory exists
-        os.makedirs(os.path.dirname(hpxml_path), exist_ok=True)
-        
-        print("Saving converted file to:", hpxml_path)
-        
-        # Write the converted HPXML content to the output file
-        with open(hpxml_path, "w") as f:
-            f.write(hpxml_string)
-
-        if not do_not_sim:
-            # Pause 3 seconds
-            import time
-            time.sleep(3)
-
-            path_to_log = f"{output_path}/run"
-            # Run the OpenStudio simulation
-            command = [
-                f"/usr/local/bin/openstudio",
-                ruby_hpxml_path,
-                "-x",
-                hpxml_path
-            ]
+    # Define a function to process each file
+    def process_file(filepath):
+        try:
+            print("================================================")
+            print("Processing file:", filepath)
             
-            # Convert flags to a list of strings
-            flagslist = flags.split()
-            command.extend(flagslist)
+            # Read the content of the H2K file
+            with open(filepath, "r", encoding="utf-8") as f:
+                h2k_string = f.read()
             
-            try:
-                print("Running simulation...")
-                result = subprocess.run(
-                    command,
-                    cwd=hpxml_os_path,
-                    check=True,
-                    capture_output=True,
-                    text=True
-                )
-                print("Simulation result:", result)
-            except subprocess.CalledProcessError as e:
-                print("Error during simulation:", e.stderr)
+            # Convert the H2K content to HPXML format
+            hpxml_string = h2ktohpxml(h2k_string)
+            
+            # Define the output path for the converted HPXML file
+            hpxml_path = os.path.join(dest_hpxml_path, pathlib.Path(filepath).stem, pathlib.Path(filepath).stem + ".xml")
+
+            # Ensure the output directory exists
+            os.makedirs(os.path.dirname(hpxml_path), exist_ok=True)
+            
+            print("Saving converted file to:", hpxml_path)
+            
+            # Write the converted HPXML content to the output file
+            with open(hpxml_path, "w") as f:
+                f.write(hpxml_string)
+
+            if not do_not_sim:
+                # Pause 3 seconds
+                time.sleep(3)
+
+                path_to_log = f"{output_path}/run"
+                # Run the OpenStudio simulation
+                command = [
+                    f"/usr/local/bin/openstudio",
+                    ruby_hpxml_path,
+                    "-x",
+                    hpxml_path
+                ]
+                
+                # Convert flags to a list of strings
+                flagslist = flags.split()
+                command.extend(flagslist)
+                
+                try:
+                    print("Running simulation for file:", hpxml_path)
+                    result = subprocess.run(
+                        command,
+                        cwd=hpxml_os_path,
+                        check=True,
+                        capture_output=True,
+                        text=True
+                    )
+                    print("Simulation result:", result)
+                    return (filepath, "Success", "")
+                except subprocess.CalledProcessError as e:
+                    print("Error during simulation:", e.stderr)
+                    return (filepath, "Failure", e.stderr)
+            else:
+                return (filepath, "Success", "")
+        except Exception as e:
+            return (filepath, "Failure", str(e))
+
+    # Use ThreadPoolExecutor to process files concurrently with a limited number of threads
+    max_workers = max(1, os.cpu_count() - 1)
+    print(f"Processing files with {max_workers} threads...")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results = list(executor.map(process_file, h2k_files))
+
+    # Write results to a CSV file
+    csv_path = os.path.join(dest_hpxml_path, "processing_results.csv")
+    with open(csv_path, "w", newline="") as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(["Filepath", "Status", "Error"])
+        csvwriter.writerows(results)
+
         
 if __name__ == '__main__':
     cli()
