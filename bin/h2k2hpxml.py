@@ -41,7 +41,7 @@ def credits():
         print(random.choice(colors) + pyfiglet.figlet_format(x) + Fore.RESET)
 
 @cli.command(help="Convert and Simulate H2K file to OS/E+.")
-@click.option('--input_path','-i', default=os.path.join(PROJECT_ROOT,'example'), help='h2k file or folder containing h2k files.')
+@click.option('--input_path','-i', default=os.path.join('/shared'), help='h2k file or folder containing h2k files.')
 @click.option('--output_path','-o', help='Path to output hpxml files. By default it is the same as the input path with a folder named output created inside it.')
 @click.option('--timestep', multiple=True, default=[], help='Request monthly output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
 @click.option('--daily', multiple=True, default=[], help='Request daily output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
