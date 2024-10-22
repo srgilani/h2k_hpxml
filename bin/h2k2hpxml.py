@@ -40,7 +40,7 @@ def credits():
 
 @cli.command(help="Convert and Simulate H2K file to OS/E+.")
 @click.option('--input_path','-i', default=os.path.join(PROJECT_ROOT,'cli','input'), help='h2k file or folder containing h2k files.')
-@click.option('--output_path','-o', default=os.path.join(PROJECT_ROOT,'cli','output'), help='Path to output hpxml files.')
+@click.option('--output_path','-o', help='Path to output hpxml files. By default it is the same as the input path with a folder named output created inside it.')
 @click.option('--timestep', multiple=True, default=[], help='Request monthly output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
 @click.option('--daily', multiple=True, default=[], help='Request daily output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
 @click.option('--hourly', multiple=True, default=[], help='Request hourly output type (ALL, total, fuels, enduses, systemuses, emissions, emissionfuels, emissionenduses, hotwater, loads, componentloads, unmethours, temperatures, airflows, weather, resilience); can be called multiple times')
@@ -65,6 +65,7 @@ def run(input_path,
             add_stochastic_schedules,
             add_timeseries_output_variable,
             do_not_sim):
+    import shutil
     """
     Convert H2K files to HPXML format based on the provided configuration file.
 
@@ -107,12 +108,31 @@ def run(input_path,
     
     # Get source and destination paths from the configuration
     source_h2k_path = input_path
-    dest_hpxml_path = output_path
+    if output_path:
+        dest_hpxml_path = output_path
+    else:
+        dest_hpxml_path = os.path.join(input_path, "output")
+    dest_hpxml_path = os.path.join(input_path, "output")
+    # If the destination path exists, delete the folder
+    if os.path.exists(dest_hpxml_path):
+        shutil.rmtree(dest_hpxml_path)
+    # Create the destination folder
+    os.makedirs(dest_hpxml_path, exist_ok=True)
+
 
     # Determine if the source path is a single file or a directory of files
-    h2k_files = [source_h2k_path] if source_h2k_path.lower().endswith(".h2k") else [
-        os.path.join(source_h2k_path, x) for x in os.listdir(source_h2k_path)
-    ]
+    if os.path.isfile(source_h2k_path) and source_h2k_path.lower().endswith(".h2k"):
+        h2k_files = [source_h2k_path]
+    elif os.path.isdir(source_h2k_path):
+        h2k_files = [os.path.join(source_h2k_path, f) for f in os.listdir(source_h2k_path) if f.lower().endswith(".h2k")]
+    else:
+        raise ValueError(f"The source path {source_h2k_path} is neither a .h2k file nor a directory containing .h2k files.")
+
+
+    # # Determine if the source path is a single file or a directory of files
+    # h2k_files = [source_h2k_path] if source_h2k_path.lower().endswith(".h2k") else [
+    #     os.path.join(source_h2k_path, x) for x in os.listdir(source_h2k_path)
+    # ]
 
     # Translate files to hpxml
     # Process each H2K file
@@ -154,8 +174,8 @@ def run(input_path,
             ]
             
             # Convert flags to a list of strings
-            flags = flags.split()
-            command.extend(flags)
+            flagslist = flags.split()
+            command.extend(flagslist)
             
             try:
                 print("Running simulation...")
