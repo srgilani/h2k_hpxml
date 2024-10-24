@@ -5,6 +5,7 @@ import json
 import requests
 import zipfile
 import configparser
+import csv
 
 # Load configuration file and get the hpxml_os_path, weather_vintage, and weather_library
 config = configparser.ConfigParser()
@@ -12,7 +13,6 @@ config_path = os.path.join(os.path.dirname(__file__),"..","..","conversionconfig
 if not os.path.exists(config_path):
     raise FileNotFoundError(f"Configuration file not found at {config_path}")
 config.read(config_path)
-
 
 prov_terr_codes = {
     "BRITISH COLUMBIA": "BC",
@@ -30,7 +30,6 @@ prov_terr_codes = {
     "NUNAVUT": "NU",
 }
 
-
 def get_cwec_file(weather_region="ONTARIO", 
                   weather_location="LONDON", 
                   weather_folder=os.path.join(config.get("paths", "hpxml_os_path"),"weather"),
@@ -43,37 +42,32 @@ def get_cwec_file(weather_region="ONTARIO",
     weather_vintage = unidecode(weather_vintage).upper()
     weather_library = unidecode(weather_library).lower()
 
-    with open(
-        os.path.join(
-            os.path.dirname(__file__),"..", "resources", "weather",f"{weather_library}.json"
-        ),
-        "r",
-    ) as f:
-        canadian_cwec_files = json.load(f)
-    # returns the name of the file without the file extension (e.g. .epw)
-    default_file = canadian_cwec_files[0]
+    # Read the csv file /workspaces/h2k_hpxml/h2ktohpxml/utils/weather.py with the list of weather files
 
+    weather_files_csv = os.path.join(os.path.dirname(__file__),"..", "resources", "weather", "h2k_weather_names.csv")
 
-    if weather_region not in prov_terr_codes.keys():
-        print(f"Invalid weather region: {weather_region}")
-        print(f"Valid weather regions are: {prov_terr_codes.keys()}")
-        return default_file
+    if not os.path.exists(weather_files_csv):
+        raise FileNotFoundError(f"CSV file not found at {weather_files_csv}")
 
-    prov_terr_code = prov_terr_codes[weather_region]
-
-    search_string = f"CAN_{prov_terr_code}_{weather_location}_{weather_vintage}"
-    # Find the closest match to the search_string in the canadian_cwec_files list
-    closest_match = difflib.get_close_matches(search_string.lower(), canadian_cwec_files, n=1, cutoff=0.0)
-    if closest_match:
-        zip_file =  closest_match[0]
-    else:
-        raise(f"No close match found for: {search_string}")
+    with open(weather_files_csv, mode='r') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        weather_files = [row for row in csv_reader]
+    province_english = weather_region
+    city_english = weather_location
+    
+    # Look up the corresponding CWEC2020.zip value given the province and city
+    zip_file = None
+    for row in weather_files:
+        if row["provinces_english"] == province_english and row["cities_english"] == city_english:
+            zip_file = row["CWEC2020.zip"]
+            break
+    if zip_file is None:
+        raise ValueError(f"Could not find a CWEC2020.zip file for {province_english} and {city_english}")
     
     #Check to see if epw file already exists in the weather folder
     epw_file = os.path.join(os.path.join(weather_folder), f"{zip_file[:-4]}.epw")
     if os.path.exists(epw_file):
         print(f"File already exists: {epw_file}")
-        
         return os.path.join(weather_folder, f"{zip_file[:-4]}")
 
     # Download the file from github 
@@ -97,7 +91,6 @@ def get_cwec_file(weather_region="ONTARIO",
                 zip_ref.extract(file, extract_path)
     return os.path.join(extract_path, f"{zip_file[:-4]}")
 
-
 def get_climate_zone(hdd):
     if hdd < 3000:
         return "4"
@@ -111,3 +104,5 @@ def get_climate_zone(hdd):
         return "7b"
     else:
         return "8"
+
+

@@ -161,3 +161,4 @@ cython_debug/
 
 
 tests/files
+example/output
