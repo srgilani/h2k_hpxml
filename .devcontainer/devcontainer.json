@@ -2,23 +2,9 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/universal
 {
 	"name": "H2K_HPXML_DevContainer",
-	// use a Dockerfile
-	"build": {"dockerfile": "Dockerfile"},
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "uname -a",
-
-	// Configure tool-specific properties.
-	// "customizations": {},
-
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+	// use a pre-built image 
+	// see https://github.com/canmet-energy/h2k_hpxml_container/blob/main/Dockerfile
+	"image": "canmet/h2k_hpxml_container:1.7.0.1.1",
 	"containerUser": "vscode",
 	"customizations": {
 		"vscode": {
