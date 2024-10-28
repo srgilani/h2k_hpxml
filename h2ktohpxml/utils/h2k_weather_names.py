@@ -23,7 +23,8 @@ def get_numbers_and_provinces(file_path="/workspaces/h2k_hpxml/h2ktohpxml/utils/
         "NUNAVUT": "NU",
     }
     
-    # Load the list of CWEC files from a JSON file
+    # Load the list of CWEC files from a JSON file. This is from the btap weather library
+    # https://github.com/canmet-energy/btap_weather/blob/main/historic_weather_filenames.json
     weather_library = "historic"
     with open(
         os.path.join(
@@ -113,7 +114,7 @@ def get_numbers_and_provinces(file_path="/workspaces/h2k_hpxml/h2ktohpxml/utils/
     merged_df['provinces_english'] = merged_df['provinces_english'].apply(unidecode)
     merged_df['cities_english'] = merged_df['cities_english'].apply(unidecode)
     
-    # Define the types of historic weather files to look for
+    # Define the types of historic weather files to look for. Only do this for CWEC2020.zip types for now.
     historic_types = [
         "CWEC2020.zip",
     ]
@@ -151,5 +152,5 @@ def get_numbers_and_provinces(file_path="/workspaces/h2k_hpxml/h2ktohpxml/utils/
     
     return number_of_cities, number_of_provinces, provinces_english, provinces_city_map, cities_english, provinces_french, cities_french
 
-# Call the function and store the returned values
-number_of_cities, number_of_provinces, provinces_english, provinces_city_map, cities_english, provinces_french, cities_french = get_numbers_and_provinces()
+# Main Code Call. I like making functions for everything by default in case it can be reused.
+get_numbers_and_provinces()
