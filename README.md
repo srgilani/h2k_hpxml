@@ -37,7 +37,7 @@ Flow (to implement):
 5. HPXML Section: Building Summary (complete)
 6. HPXML Section: Climate Zones (complete)
 7. HPXML Section: Enclosure (complete)
-8. HPXML Section: Systems (OUT OF SCOPE)
+8. HPXML Section: Systems (Ongoing) 
 9. HPXML Section: Appliances (complete)
 10. HPXML Section: Lighting & Ceiling Fans (complete)
 11. HPXML Section: Pools & Permanent Spas(complete)
