@@ -1,10 +1,10 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/universal
 {
-	"name": "H2K_HPXML_DevContainer",
+	"name": "H2K_HPXML",
 	// use a pre-built image 
 	// see https://github.com/canmet-energy/h2k_hpxml_container/blob/main/Dockerfile
-	"image": "canmet/h2k_hpxml_container:1.7.0.1.1",
+	"image": "canmet/model_dev_container:3.7.0",
 	"containerUser": "vscode",
 	"customizations": {
 		"vscode": {
@@ -13,7 +13,11 @@
 				"ms-azuretools.vscode-docker",
 				"KoichiSasada.vscode-rdbg",
 				"karyfoundation.idf",
-                "ms-python.python"
+				"ms-python.python",
+				"mechatroner.rainbow-csv",
+				"janisdd.vscode-edit-csv",
+				"qwtel.sqlite-viewer",
+				"ms-toolsai.jupyter"
 			],
 			"settings": {
                 "files.associations": {
