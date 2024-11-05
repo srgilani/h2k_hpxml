@@ -1,98 +1,45 @@
-# h2k-hpxml
-Translator functions to convert h2k files to HPXML format, run files via OpenStudio workflow, and compare results.
+# H2K -> HPXML -> Energyplus Initiative 
 
-Compatible Software Versions:
-HOT2000 v11.10, v11.11 and v11.12
-OpenStudio 3.7.0 - https://github.com/NREL/OpenStudio/releases/tag/v3.7.0
-OpenStudio-HPXML 1.7.0 - https://github.com/NREL/OpenStudio-HPXML/releases
+## Background
 
+CMHC is investigating energy use in Canada’s existing housing stock and exploring policy measures to enhance energy efficiency and affordability for Canadians. The primary tool used to evaluate building energy performance in Canada is NRCan’s Hot2000 (H2K) software. H2K is a building energy simulator that estimates the annual energy consumption of homes across Canada. NRCan has also developed a comprehensive database of archetypes representing housing across the country, using over 30 years of data from the EnerGuide for housing program. This location-specific database includes more than 6,000 archetypes, each reflecting regional housing characteristics.
 
-# Setup
-1. Ensure that the software versions above are installed
-2. Add "C:/openstudio-3.7.0/bin to your PATH environment variables, and ensure no older versions of OS are referenced. 
-3. Clone or download this repository
-4. Download the required CWEC .epw weather files for Canada or by province (https://climate.weather.gc.ca/prods_servs/engineering_e.html)
-5. Add the Canadian weather files to the "weather" folder in the OpenStudio-HPXML directory (e.g. C:\OpenStudio-HPXML-v1.7.0\OpenStudio-HPXML\weather)
+However, H2K has some limitations, including the inability to provide hourly energy data.  H2K only produces annual energy estimates. This lack of hourly resolution restricts its capacity to support analyses of modern energy conservation measures, such as thermal and electrical storage technologies, renewable energy, advanced building automation, and other innovative solutions. Furthermore, H2K cannot assess the effects of time-of-use (TOU) electricity rates or peak demand on housing affordability.
 
+In contrast, the software created by the U.S. Department of Energy (U.S. DOE), EnergyPlus/HPXML, provides high resolution sub-hourly outputs.  EnergyPlus/HPXML was developed in 2001 to be the standard simulation tool used by the U.S. DOE to support housing and building energy analysis.  Over $3M is annually invested in EnergyPlus/HPXML to support R&D, as well as national programs.  It provides detailed simulation information at a sub-hourly resolution that can examine time-of-use (TOU) technologies and help examine evaluate several advanced energy conservation measures. 
 
+The goal of this work is to leverage the 6000 H2K archetype model data, by translating them to EnergyPlus/HPXML. These new models will then produce sub-hourly natural gas and electricity usage profiles to better analyze the Canadian housing stock. This will create an unprecedented level of information on how these homes consume electricity and natural gas on a sub hourly basis.  It can also provide estimates on the hourly temperatures these homes experience in extreme weather events. 
 
-### conversionconfig.ini
-Use the conversionconfig.ini to specify the file or folder path of the h2k file(s) you would like to convert to HPXML.
-This file can also be used to define non-h2k parameters for the translation process.
+This data could be used to better understand thermal safety measures (overheating) that could be applied to existing and new homes.  The affordability of different HVAC systems combined with TOU electricity rates could show what are the most cost-effective systems based on TOU electric utility rates.  It could also be used to explore new technologies such as energy storage to support electrification. This and other analyses are possible and open up a door to a wealth of analysis for housing down the road.
 
+## Why use HPXML?
+HPXML, or Home Performance eXtensible Markup Language, is a standardized data format designed for the residential energy efficiency industry. It enables consistent data collection, sharing, and analysis across different software systems, tools, and stakeholders involved in home energy performance. Developed by the Building Performance Institute (BPI) and managed by the National Renewable Energy Laboratory (NREL), HPXML provides a common structure for information about home energy audits, improvements, and performance metrics. By using HPXML, organizations can streamline processes, improve data accuracy, and easily integrate with energy efficiency programs, certifications, and incentives. More information on the HPXML standard can be found [here](https://hpxml-guide.readthedocs.io/en/latest/overview.html)
 
-# Running the translator
-1. Ensure the virtual environment is activated (run `.\.venv\Scripts\Activate.ps1`) and the required packages are installed (`pip install -r .\requirements.txt`)
-2. Run main.py (`py main.py`) to translate a single file or a directory of files based on the `source_h2k_path` specified in conversionconfig.ini
-3. Run run.py (`py run.py`) to run an hpxml file through the HPXML-OS workflow
-4. Run simulateh2k.py (`py simulateh2k.py`) to translate a file and simulate it using the HPXML-OS workflow
+## Roadmap
+The overall goal of this project is to have full support of all H2K features translated to OS/EnergyPlus via HPXML format. We have taken an incremental approach to release the translator as we add funtionality. This allows researchers and stakeholders to use, and evaluate the translation capabilities as we develop them. 
 
+The timeline is as follows: 
 
-## h2ktohpxml
-Flow (to implement):
-1. Pull in blank HPXML template, remove what's needed
-2. HPXML Section: Software Info (complete)
-3. HPXML Section: Building (complete)
-4. HPXML Section: Building Site (complete)
-5. HPXML Section: Building Summary (complete)
-6. HPXML Section: Climate Zones (complete)
-7. HPXML Section: Enclosure (complete)
-8. HPXML Section: Systems (Ongoing) 
-9. HPXML Section: Appliances (complete)
-10. HPXML Section: Lighting & Ceiling Fans (complete)
-11. HPXML Section: Pools & Permanent Spas(complete)
-12. HPXML Section: Misc Loads(complete)
+| Phase | Description | Target Completion Date | Status |  |
+|---|---|---|---|---|
+| 1 | Loads Translations. This includes schedules, occupancy, plug loads, envelope charecteristics & climate file mapping. Default fixed HVAC  |Summer 2024| Completed & available for use. Presentation comparing results available [here](docs/H2k-HPXML-20240214-V2.pdf)|
+| 2 | HVAC Systems. This includes all systems and fuel types.|Spring 2025|Underway|
+| 3 | Multi-Urban Residential Buildings | TBD | Not Started |
 
+Here is a [list](docs/status.md) of the current completed sections related to the HPXML standard. This is a list of the assumptions and issues that were found in the translation work.
 
-## Assumptions
-- Attic/gable ceilings are assumed to not have gable walls defined in the h2k file. They are created in the translation process by assuming conventional rectangular geometry, where half the "length" ceiling input is assumed to be one side of the rectangle.
-- All attics are assumed to be vented
-- Area of gable ends of cathedral ceilings are assumed to have been defined within h2k wall components.
-- Attic/Hip type ceilings assume that the "length" input provided is the ceiling perimeter (all edges are compressed)
-- Scissor ceiling surfaces are assumed to be at half the pitch of the roof (i.e. if a roof slope is 4/12, ceiling surface slope is 2/12)
-- HPXML's default occupant and appliance schedules are used.
-- Split level and split entry options in HOT2000 are treated as 2 storeys when counting the number of conditioned floors in HPXML.
-- The HPXML workflow states that enclosed spaces such as garages should be explicitly included in the model. However, HOT2000 files do not account for these spaces, so they are ignored in the translation process.
+## Usage
+During development, we've created a separate Docker command-line interface (CLI) application that translates and runs H2K data files in EnergyPlus. To use it, simply install Docker Desktop on your machine. Comprehensive installation and usage documentation is available [here](https://github.com/canmet-energy/model-dev-container)
 
-- The "Adjacent to unconditioned space" checkbox in HOT2000 is assumed to be equivalent to "other non-freezing space" for attached buildings, and but there is no allowable HPXML equivalent for detached buildings. Therefore, we must use "outside" for buffered wall exteriors for detached buildings unless we model the entire garage or there is another HPXML workaround
+## Development Environment
 
+The project integrates several key components to achieve its goals:
 
-- Windows can only be attached to wall components in HPXML, not doors. The current solution is to attach windows on doors to the parent wall of the door, and subtract the window area from the door area.
-- For basement walls, the AssemblyEffectiveRValue includes the concrete or wood wall portion.
-- Pony wall area is calculated as `pony wall height` * `exposed basement perimeter`.
-- Above slab insulation is mapped to below slab insulation in HPXML, which has no above slab option.
-- For slab perimeter insulation (UnderSlabInsulation), we include any under-footing measurement in the width provided to HPXML, if applicable.
-- Carpet fraction and R-value for slabs overwritten with 0, otherwise HPXML defaults to values >0.
-- Standard operating conditions are hard coded for base loads.
-- Appliance Energy Guide Label inputs have been reverse engineered to achieve appliance water and energy consumption results that match HOT2000's standard operating conditions.
-- All "exterior use" consumption in HOT2000's baseloads are lumped under exterior lighting in HPXML.
+* EnergyPlus
+* OpenStudio SDK
+* NREL's HPXML-OpenStudio Python source code
+* Python 3 and necessary libraries
 
+To streamline development, we've created a [Visual Studio Code](https://code.visualstudio.com/), [devcontainer](https://code.visualstudio.com/docs/devcontainers/containers) environment that automatically installs all required libraries with their correct versions on your computer, ensuring a smooth setup and consistent configuration.
 
-### Field Assumptions:
-- Building Site Type = suburban
-- Building Site Surroundings = stand-alone
-
-
-Questions:
-- Are there any fields in an H2k Ceiling code that would indicate a radiant barrier?
-
-### Issues:
-
-#### Attached Surfaces
-If you tell HPXML that the house is attached (i.e. row house end), but do not specify any attached surfaces then the calculation will break. This is a problem because attached surfaces are not modeled in HOT2000. The following workaround is proposed.
-
-1. Check the ratio of exposed foundation perimeter to foundation perimeter. The non-exposed fraction will represent the amount of attached wall perimeter we need to add.
-2. Filter all non buffered HOT2000 walls and calculate their total area, average wall height, and most common R-value.
-3. Multiply the total non-buffered wall area from (2.) by the non-exposed fraction from (1.) to determine the area of the attached wall.
-4. Create a new wall component with the attached wall area, average wall height, and most common R-value. 
-
-All added walls from this method will have their ExteriorAdjacentTo field set to "other housing unit", meaning they should be adiabatic surfaces since the exterior temperature will be the same as the interior temperature for this location type.
-
-This method requires testing with houses having:
-- Complex multi-component foundations
-- Only exposed floors as foundations (will need to use a common ratio)
-
-#### ConditionedFloorArea restrictions
-Error message: "Error: Expected ConditionedFloorArea to be greater than or equal to the sum of conditioned slab/floor areas."
-This error message means that we cannot include floors above a basement in the model. 
-However, the workflow does require a floor above a crawlspace.
+Full instructions on how to set up the development environment are [here](docs/vscode.md)
