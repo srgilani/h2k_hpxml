@@ -1,4 +1,4 @@
-# H2K -> HPXML -> Energyplus Initiative 
+# H2K -> HPXML -> EnergyPlus Initiative 
 
 ## Background
 
@@ -43,3 +43,5 @@ The project integrates several key components to achieve its goals:
 To streamline development, we've created a [Visual Studio Code](https://code.visualstudio.com/), [devcontainer](https://code.visualstudio.com/docs/devcontainers/containers) environment that automatically installs all required libraries with their correct versions on your computer, ensuring a smooth setup and consistent configuration.
 
 Full instructions on how to set up the development environment are [here](docs/vscode.md)
+
+Contributions are encouraged! If you find a bug, submit an "Issue" on the tab above.  Please understand that this is still under heavy development and should not be used for any production level of work. 
