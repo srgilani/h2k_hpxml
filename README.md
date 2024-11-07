@@ -26,6 +26,8 @@ The timeline is as follows:
 | 2 | HVAC Systems. This includes all systems and fuel types.| 3.9.0 |Spring 2025|Underway|
 | 3 | Multi-Urban Residential Buildings | TBD |TBD | Not Started |
 
+**Note**: Versioning of components targeted for each OS SDK is kept [here](https://github.com/canmet-energy/model-dev-container/blob/main/versioning.md). This will keep the development and results consistent across development as we upgrade components.
+
 
 Here is a [list](docs/status.md) of the current completed sections related to the HPXML standard. This is a list of the assumptions and issues that were found in the translation work.
 
@@ -44,5 +46,6 @@ The project integrates several key components to achieve its goals:
 To streamline development, we've created a [Visual Studio Code](https://code.visualstudio.com/), [devcontainer](https://code.visualstudio.com/docs/devcontainers/containers) environment that automatically installs all required libraries with their correct versions on your computer, ensuring a smooth setup and consistent configuration.
 
 Full instructions on how to set up the development environment are [here](docs/vscode.md)
+
 
 Contributions are encouraged! If you find a bug, submit an "Issue" on the tab above.  Please understand that this is still under heavy development and should not be used for any production level of work. 
