@@ -21,6 +21,7 @@ from .enclosure.infiltration import get_infiltration
 from .baseloads.appliances import get_appliances
 from .baseloads.lighting import get_lighting
 from .baseloads.miscloads import get_plug_loads
+from .systems.systems import get_systems
 
 from . import Model
 
@@ -33,9 +34,7 @@ def h2ktohpxml(h2k_string="", config={}):
     )  # To add a test adiabatic wall to check impact on loads
 
     # ================ 1. Load template HPXML file ================
-    base_hpxml_path = os.path.join(
-        os.path.dirname(__file__), "templates", "base.xml"
-    )
+    base_hpxml_path = os.path.join(os.path.dirname(__file__), "templates", "base.xml")
     with open(base_hpxml_path, "r", encoding="utf-8") as f:
         base_hpxml = f.read()
 
@@ -316,7 +315,23 @@ def h2ktohpxml(h2k_string="", config={}):
 
     print("heated floor area", building_const_dict["ConditionedFloorArea"])
 
-    # ================ 8. HPXML Section: Systems (OUT OF SCOPE) ================
+    # ================ 8. HPXML Section: Systems ================
+    systems_results = get_systems(h2k_dict, model_data)
+    hvac_dict = systems_results["hvac_dict"]
+    # dhw_dict = systems_results["dhw_dict"]
+
+    # only update the heating system from the template if we've translated the h2k into a valid object
+    if model_data.get_is_hvac_translated:
+        hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"][
+            "HVAC"
+        ] = hvac_dict
+    else:
+        # Add warning/error
+        model_data.add_warning_message(
+            {
+                "message": "The h2k file contains an HVAC system that is not supported by the translation. The default HVAC section from the template was used in the output HPXML file."
+            }
+        )
 
     # ================ 9. HPXML Section: Appliances ================
     hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Appliances"] = get_appliances(

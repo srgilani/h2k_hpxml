@@ -21,6 +21,12 @@ class ModelData:
         self.crawlspace_count = 0
         self.slab_count = 0
 
+        # Tracking info for Systems
+        self.is_hvac_translated = False
+        self.is_dhw_translated = False
+        self.hvac_distribution_type = None
+        self.system_ids = {"primary_heating": "HeatingSystem1"}
+
         # Tracking errors
         self.error_list = []
 
@@ -139,3 +145,44 @@ class ModelData:
 
     def get_slab_count(self):
         return self.slab_count
+
+    def set_is_hvac_translated(self, val):
+        # Set to True if we've translated the entire HVAC system into a valid object
+        self.is_hvac_translated = val
+
+    def set_is_dhw_translated(self, val):
+        # Set to True if we've translated the entire DHW system into a valid object
+        self.is_dhw_translated = val
+
+    def get_is_hvac_translated(self):
+        return self.is_hvac_translated
+
+    def get_is_dhw_translated(self):
+        return self.is_dhw_translated
+
+    def set_hvac_distribution_type(self, val):
+        if val in ["air", "hydronic"]:
+            self.hvac_distribution_type = val
+
+    def get_hvac_distribution_type(self):
+        return self.hvac_distribution_type
+
+    # tracking hvac system ids
+
+    def __getid__(self, key):
+        return self.system_ids.get(key, key)
+
+    def __setid__(self, key, newvalue):
+        self.system_ids[key] = newvalue
+
+    def set_system_id(self, obj):
+        for key in obj.keys():
+            self.__setid__(key, obj[key])
+
+    def get_system_id(self, key, default=None):
+        value = self.__getid__(key)
+
+        if value == key:
+            return default
+        else:
+            return value
