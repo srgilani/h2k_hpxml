@@ -22,6 +22,11 @@ from .hvac_distribution import get_hvac_distribution
 # This function compiles translations for all HVAC and DHW sections, as there are many dependencies between these sections
 def get_systems(h2k_dict, model_data):
 
+    # Only one primary heating system, define its id
+    model_data.set_system_id({"primary_heating": "HeatingSystem1"})
+    model_data.set_system_id({"air_conditioner": "CoolingSystem1"})
+    model_data.set_system_id({"hvac_distribution": "HVACDistribution1"})
+
     # Primary heating system as a component of the HVACPlant Section
     primary_heating_result = get_primary_heating_system(h2k_dict, model_data)
 

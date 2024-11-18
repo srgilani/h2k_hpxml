@@ -30,30 +30,6 @@
             "hpxml": "HPXML,Building,BuildingDetails,BuildingSummary,BuildingConstruction,ConditionedFloorArea"
         }
     },
-    "baseboard_capacity": {
-        "units": {
-            "unit_type": "power",
-            "h2k_units": "kW",
-            "hpxml_units": "BTU/h"
-        },
-        "decimals": 2,
-        "address": {
-            "h2k": "Specifications,OutputCapacity,@value",
-            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingCapacity"
-        }
-    },
-    "baseboard_efficiency": {
-        "units": {
-            "unit_type": "fraction",
-            "h2k_units": "%",
-            "hpxml_units": "fraction"
-        },
-        "decimals": 2,
-        "address": {
-            "h2k": "Specifications,@efficiency",
-            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,AnnualHeatingEfficiency,Value"
-        }
-    },
     "bg_heated_floor_area":{
         "units": {
             "unit_type": "area",
@@ -521,6 +497,73 @@
         "address": {
             "h2k": "HouseFile,House,Ventilation,SupplementalVentilatorList,Dryer,@exhaustFlowrate",
             "hpxml": "HPXML,Building,BuildingDetails,Appliances,ClothesDryer,VentedFlowRate"
+        }
+    },
+    "baseboard_capacity": {
+        "units": {
+            "unit_type": "power",
+            "h2k_units": "kW",
+            "hpxml_units": "BTU/h"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,OutputCapacity,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingCapacity"
+        }
+    },
+    "baseboard_efficiency": {
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "%",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,@efficiency",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,AnnualHeatingEfficiency,Value"
+        }
+    },
+    "furnace_capacity": {
+        "units": {
+            "unit_type": "power",
+            "h2k_units": "kW",
+            "hpxml_units": "BTU/h"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,OutputCapacity,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingCapacity"
+        }
+    },
+    "furnace_sizing_factor": {
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,@sizingFactor",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,extension,HeatingAutosizingFactor"
+        }
+    },
+    "furnace_efficiency": {
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "%",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,@efficiency",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,AnnualHeatingEfficiency,Value"
+        }
+    },
+    "furnace_pilot_light": {
+        "units": {
+            "unit_type": "daily_energy",
+            "h2k_units": "MJ/day",
+            "hpxml_units": "BTU/h"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,@pilotLight",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,Furnace,extension,PilotLightBtuh"
         }
     },
     "setpoint_heating_day": {

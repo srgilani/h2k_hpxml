@@ -117,6 +117,10 @@ unit_map = {
         "F": {"C": {"scale": 0.5555555555555556, "offset": -17.77777777777778}},
         "C": {"F": {"scale": 1.8, "offset": 32.0}},
     },
+    "daily_energy": {
+        "MJ/day": {"BTU/h": {"scale": 39.4924, "offset": 0}},
+        "BTU/h": {"MJ/day": {"scale": 0.025321328, "offset": 0}},
+    },
 }
 
 

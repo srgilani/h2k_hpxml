@@ -161,8 +161,7 @@ class ModelData:
         return self.is_dhw_translated
 
     def set_hvac_distribution_type(self, val):
-        if val in ["air", "hydronic"]:
-            self.hvac_distribution_type = val
+        self.hvac_distribution_type = val
 
     def get_hvac_distribution_type(self):
         return self.hvac_distribution_type
