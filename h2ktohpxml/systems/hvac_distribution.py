@@ -38,7 +38,7 @@ def get_hvac_distribution(h2k_dict, model_data):
                             "DuctType": "supply",
                             "DuctLeakage": {
                                 "Units": "CFM25",
-                                "Value": 75.0,
+                                "Value": 0,
                                 "TotalOrToOutside": "to outside",
                             },
                         },
@@ -46,7 +46,7 @@ def get_hvac_distribution(h2k_dict, model_data):
                             "DuctType": "return",
                             "DuctLeakage": {
                                 "Units": "CFM25",
-                                "Value": 25.0,
+                                "Value": 0,
                                 "TotalOrToOutside": "to outside",
                             },
                         },
