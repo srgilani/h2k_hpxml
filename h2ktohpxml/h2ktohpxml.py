@@ -321,7 +321,7 @@ def h2ktohpxml(h2k_string="", config={}):
     # dhw_dict = systems_results["dhw_dict"]
 
     # only update the heating system from the template if we've translated the h2k into a valid object
-    if model_data.get_is_hvac_translated:
+    if model_data.get_is_hvac_translated():
         hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"][
             "HVAC"
         ] = hvac_dict
