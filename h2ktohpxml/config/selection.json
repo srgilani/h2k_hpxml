@@ -358,5 +358,33 @@
             "wood pellets"
         ],
         "default": "electricity"
+    },
+    "water_faucet_flow_rate": {
+        "address": {
+            "h2k": "HouseFile,House,BaseLoads,WaterUsage,BathroomFaucets",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingSystemFuel"
+        },
+        "map": {
+            "Ultra Low flow 3.8  L/min (1.0 US gpm)": 1.0,
+            "Low flow 5.7 L/min (1.5 US gpm)": 1.5,
+            "Standard 8.3 L/min (2.2 US gpm)": 2.2
+        },
+        "hpxml_opts": [1.0,1.5,2.2],
+        "default": 2.2
+    },
+    "shower_head_flow_rate": {
+        "address": {
+            "h2k": "HouseFile,House,BaseLoads,WaterUsage,Shower,FlowRate",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingSystemFuel"
+        },
+        "map": {
+            "Ultra Low flow 5.7 L/min (1.5 US gpm)": 1.5,
+            "Low flow 7.6 L/min (2.0 US gpm)": 2.0,
+            "Standard 9.5 L/min (2.5 US gpm)": 2.5,
+            "Older 15 L/min (4.0 US gpm)": 4.0,
+            "High Flow 19 L/min (5.0 US gpm)": 5.0
+        },
+        "hpxml_opts": [1.5,2.0,2.5,4.0,5.0],
+        "default": 2.5
     }
 }

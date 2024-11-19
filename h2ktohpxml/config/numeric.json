@@ -608,5 +608,31 @@
             "h2k": "HouseFile,House,Temperatures,MainFloors,@nighttimeSetbackDuration",
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACControl,TotalSetbackHoursperWeekHeating"
         }
+    },
+    "water_faucet_flow_rate": {
+        "address": {
+            "h2k": "HouseFile,House,BaseLoads,WaterUsage,BathroomFaucets,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterFixture,FlowRate"
+        },
+        "units": {
+            "unit_type": "liquid_flow_rate",
+            "h2k_units": "L/min",
+            "hpxml_units": "gpm_us"
+        },
+        "decimals": 2,
+        "default": 2.2
+    },
+    "shower_head_flow_rate": {
+        "address": {
+            "h2k": "HouseFile,House,BaseLoads,WaterUsage,Shower,FlowRate,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterFixture,FlowRate"
+        },
+        "units": {
+            "unit_type": "liquid_flow_rate",
+            "h2k_units": "L/min",
+            "hpxml_units": "gpm_us"
+        },
+        "decimals": 2,
+        "default": 2.5
     }
 }

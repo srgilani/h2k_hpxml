@@ -1,22 +1,31 @@
-# High level HPXML structure for HVAC portion:
-# {
-#     "HVACPlant": {
-#         "PrimarySystems": {
-#             "PrimaryHeatingSystem": {...},
-#             "PrimaryCoolingSystem": {...}
+# High level HPXML structure :
+#     "HVAC": {
+#         "HVACPlant": {
+#             "PrimarySystems": {
+#                 "PrimaryHeatingSystem": {...},
+#                 "PrimaryCoolingSystem": {...}
+#             },
+#             "HeatingSystem": [...],
+#             "CoolingSystem": {...},
 #         },
-#         "HeatingSystem": {...},
-#         "CoolingSystem": {...},
+#         "HVACControl": {...},
+#         "HVACDistribution": [...],
 #     },
-#     "HVACControl": {...},
-#     "HVACDistribution": {...},
-# }
+#     "WaterHeating": {
+#         "WaterHeatingSystem": [...],
+#         "HotWaterDistribution": [...],
+#         "WaterFixture": [...],
+#     }
 # Certain sections must be conditionally present
 # For example, with electric baseboards, no HVACDistribution section should be present
 
 from .primary_heating import get_primary_heating_system
 from .hvac_control import get_hvac_control
 from .hvac_distribution import get_hvac_distribution
+
+from .hot_water import get_hot_water_systems
+from .hot_water_distribution import get_hot_water_distribution
+from .water_fixtures import get_water_fixtures
 
 
 # This function compiles translations for all HVAC and DHW sections, as there are many dependencies between these sections
@@ -62,4 +71,17 @@ def get_systems(h2k_dict, model_data):
         ),
     }
 
-    return {"hvac_dict": hvac_dict, "dhw_dict": {}}
+    hot_water_system_result = get_hot_water_systems(h2k_dict, model_data)
+
+    hot_water_distribution_result = get_hot_water_distribution(h2k_dict, model_data)
+    water_fixtures_result = get_water_fixtures(h2k_dict, model_data)
+
+    print(water_fixtures_result)
+
+    dhw_dict = {
+        "WaterHeatingSystem": hot_water_system_result,
+        "HotWaterDistribution": hot_water_distribution_result,
+        "WaterFixture": water_fixtures_result,
+    }
+
+    return {"hvac_dict": hvac_dict, "dhw_dict": dhw_dict}
