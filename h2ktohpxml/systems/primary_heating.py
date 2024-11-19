@@ -27,8 +27,6 @@ def get_primary_heating_system(h2k_dict, model_data):
 
     type1_data = type1_heating_system.get(type1_type, {})
 
-    print("type1 system type", type1_type)
-
     primary_heating_dict = {}
     if type1_type == "Baseboards":
         # TODO: Remove is_hvac_translated flag after testing
@@ -42,10 +40,8 @@ def get_primary_heating_system(h2k_dict, model_data):
         furnace_subtype = (
             str(obj.get_val(type1_data, "Equipment,EquipmentType,English"))
         ).lower()
-        print("furnace_subtype", furnace_subtype)
 
         hpxml_heating_type = fireplace_stove_equip_map.get(furnace_subtype, None)
-        print("hpxml_heating_type", hpxml_heating_type)
 
         if hpxml_heating_type == "stove":
             # ignores differences between furnaces and boilers because HPXML has an explicit stove component
@@ -60,13 +56,7 @@ def get_primary_heating_system(h2k_dict, model_data):
         # TODO: Remove is_hvac_translated flag after testing
         model_data.set_is_hvac_translated(True)
 
-        boiler_subtype = (
-            str(obj.get_val(type1_data, "Equipment,EquipmentType,English"))
-        ).lower()
-        print("boiler_subtype", boiler_subtype)
-
-        hpxml_heating_type = fireplace_stove_equip_map.get(boiler_subtype, None)
-
+        # Wood boilers not broken down into stoves and fireplaces, only indoor/outdoor
         primary_heating_dict = get_boiler(type1_data, model_data)
 
     return primary_heating_dict
@@ -93,8 +83,6 @@ def get_electric_resistance(type1_data, model_data):
         },
         "FractionHeatLoadServed": 1,  # Hardcoded for now
     }
-
-    print("BASEBOARD: ", elec_resistance)
 
     # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
     # Also must sum to 1 across all heating systems
@@ -157,8 +145,6 @@ def get_furnace(type1_data, model_data):
                 "extension": {"PilotLightBtuh": furnace_pilot_light},
             }
         }
-
-    print("FURNACE: ", furnace_dict)
 
     # No h2k representation for "gravity" distribution type
     # Might need to update this based on logic around system types
@@ -224,8 +210,6 @@ def get_boiler(type1_data, model_data):
             }
         }
 
-    print("BOILER: ", boiler_dict)
-
     # No h2k representation for "gravity" distribution type
     # Might need to update this based on logic around system types
     # TODO: change distribution type to "radiant floor" if in-floor is defined
@@ -274,8 +258,6 @@ def get_fireplace(type1_data, model_data):
     # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
     # Also must sum to 1 across all heating systems
 
-    print("FURNACE (FIREPLACE): ", fireplace_dict)
-
     return fireplace_dict
 
 
@@ -315,7 +297,5 @@ def get_stove(type1_data, model_data):
 
     # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
     # Also must sum to 1 across all heating systems
-
-    print("FURNACE (STOVE): ", stove_dict)
 
     return stove_dict

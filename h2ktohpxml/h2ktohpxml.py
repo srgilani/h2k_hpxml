@@ -329,7 +329,7 @@ def h2ktohpxml(h2k_string="", config={}):
         # Add warning/error
         model_data.add_warning_message(
             {
-                "message": "The h2k file contains an HVAC system that is not supported by the translation. The default HVAC section from the template was used in the output HPXML file."
+                "message": "The h2k file contains an HVAC system that is not supported by the translation process. The default HVAC section from the template was used in the output HPXML file."
             }
         )
 

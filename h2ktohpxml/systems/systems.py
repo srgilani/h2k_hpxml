@@ -40,8 +40,6 @@ def get_systems(h2k_dict, model_data):
     # This may be an empty dictionary, e.g. for baseboards, in which case it must not be included in hvac_dict
     hvac_distribution_result = get_hvac_distribution(h2k_dict, model_data)
 
-    print("DISTRIBUTION: ", hvac_distribution_result)
-
     hvac_dict = {
         "HVACPlant": {
             "PrimarySystems": {
