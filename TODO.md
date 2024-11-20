@@ -35,3 +35,10 @@
 - Photovoltaics (Generation section)
 - Batteries (Battery specs not provided in h2k)
 - Generators (not explicit in h2k)
+
+
+### To-be addressed HVAC components (identified throughout translation)
+- Dual fuel system (bi-energy)
+- flue diameter inputs
+- distribution system selection
+- Combos (after heating and hot water complete)

@@ -324,5 +324,39 @@
             "other"
         ],
         "default": "air"
+    },
+    "furnace_fuel_type": {
+        "address": {
+            "h2k": "Equipment,EnergySource,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingSystemFuel"
+        },
+        "map": {
+            "Electric": "electricity",
+            "Natural gas": "natural gas",
+            "Oil": "fuel oil",
+            "Propane": "propane",
+            "Mixed Wood": "wood",
+            "Hardwood": "wood",
+            "Softwood": "wood",
+            "Wood Pellets": "wood pellets"
+        },
+        "hpxml_opts": [
+            "electricity", 
+            "natural gas", 
+            "fuel oil", 
+            "fuel oil 1", 
+            "fuel oil 2", 
+            "fuel oil 4", 
+            "fuel oil 5/6", 
+            "diesel", 
+            "propane", 
+            "kerosene", 
+            "coal", 
+            "coke", 
+            "bituminous coal", 
+            "wood", 
+            "wood pellets"
+        ],
+        "default": "electricity"
     }
 }

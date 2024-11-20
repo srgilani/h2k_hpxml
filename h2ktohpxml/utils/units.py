@@ -95,6 +95,32 @@ unit_map = {
         "L/s": {"cfm": {"scale": 2.118882, "offset": 0}},
         "cfm": {"L/s": {"scale": 0.471946998, "offset": 0}},
     },
+    "power": {
+        "BTU/h": {
+            "W": {"scale": 0.2930712104427134, "offset": 0.0},
+            "kW": {"scale": 0.0002930712104427134, "offset": 0.0},
+        },
+        "kW": {
+            "BTU/h": {"scale": 3412.14, "offset": 0.0},
+            "W": {"scale": 1000.0, "offset": 0.0},
+        },
+        "W": {
+            "BTU/h": {"scale": 3.41214, "offset": 0.0},
+            "kW": {"scale": 0.001, "offset": 0.0},
+        },
+    },
+    "fraction": {
+        "%": {"fraction": {"scale": 0.01, "offset": 0.0}},
+        "fraction": {"%": {"scale": 100.0, "offset": 0.0}},
+    },
+    "temperature": {
+        "F": {"C": {"scale": 0.5555555555555556, "offset": -17.77777777777778}},
+        "C": {"F": {"scale": 1.8, "offset": 32.0}},
+    },
+    "daily_energy": {
+        "MJ/day": {"BTU/h": {"scale": 39.4924, "offset": 0}},
+        "BTU/h": {"MJ/day": {"scale": 0.025321328, "offset": 0}},
+    },
 }
 
 
