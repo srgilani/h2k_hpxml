@@ -359,32 +359,127 @@
         ],
         "default": "electricity"
     },
-    "water_faucet_flow_rate": {
+    "hot_water_tank_type": {
         "address": {
-            "h2k": "HouseFile,House,BaseLoads,WaterUsage,BathroomFaucets",
-            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingSystemFuel"
+            "h2k": "TankType,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,WaterHeaterType"
         },
         "map": {
-            "Ultra Low flow 3.8  L/min (1.0 US gpm)": 1.0,
-            "Low flow 5.7 L/min (1.5 US gpm)": 1.5,
-            "Standard 8.3 L/min (2.2 US gpm)": 2.2
+            "Conventional tank": "storage water heater",
+            "Conserver tank": "storage water heater",
+            "Instantaneous": "instantaneous water heater",
+            "Tankless heat pump": "heat pump water heater",
+            "Heat pump": "heat pump water heater",
+            "Integrated heat pump": "heat pump water heater",
+            "Conventional tank (pilot)": "storage water heater",
+            "Tankless coil": "instantaneous water heater",
+            "Instantaneous (pilot)": "instantaneous water heater",
+            "Induced draft fan": "storage water heater",
+            "Induced draft fan (pilot)": "storage water heater",
+            "Direct vent (sealed)": "storage water heater",
+            "Direct vent (sealed, pilot)": "storage water heater",
+            "Condensing": "storage water heater",
+            "Instantaneous (condensing)": "instantaneous water heater",
+            "Not applicable": "instantaneous water heater",
+            "Fireplace": "storage water heater",
+            "Wood stove water coil": "storage water heater",
+            "Indoor wood boiler": "storage water heater",
+            "Outdoor wood boiler": "storage water heater",
+            "Wood hot water tank": "storage water heater",
+            "Solar collector system": "storage water heater"
         },
-        "hpxml_opts": [1.0,1.5,2.2],
-        "default": 2.2
+        "hpxml_opts": [
+            "storage water heater",
+            "instantaneous water heater",
+            "heat pump water heater"
+        ],
+        "default": "storage water heater"
     },
-    "shower_head_flow_rate": {
+    "hot_water_fuel_type": {
         "address": {
-            "h2k": "HouseFile,House,BaseLoads,WaterUsage,Shower,FlowRate",
-            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingSystemFuel"
+            "h2k": "EnergySource,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,FuelType"
         },
         "map": {
-            "Ultra Low flow 5.7 L/min (1.5 US gpm)": 1.5,
-            "Low flow 7.6 L/min (2.0 US gpm)": 2.0,
-            "Standard 9.5 L/min (2.5 US gpm)": 2.5,
-            "Older 15 L/min (4.0 US gpm)": 4.0,
-            "High Flow 19 L/min (5.0 US gpm)": 5.0
+            "Electricity": "electricity",
+            "Natural gas": "natural gas",
+            "Oil": "fuel oil",
+            "Propane": "propane",
+            "Mixed Wood": "wood",
+            "Hardwood": "wood",
+            "Softwood": "wood",
+            "Wood Pellets": "wood pellets",
+            "Solar": ""
         },
-        "hpxml_opts": [1.5,2.0,2.5,4.0,5.0],
-        "default": 2.5
+        "hpxml_opts": [
+            "electricity", 
+            "natural gas", 
+            "fuel oil", 
+            "fuel oil 1", 
+            "fuel oil 2", 
+            "fuel oil 4", 
+            "fuel oil 5/6", 
+            "diesel", 
+            "propane", 
+            "kerosene", 
+            "coal", 
+            "coke", 
+            "bituminous coal", 
+            "wood", 
+            "wood pellets"
+        ],
+        "default": "electricity"
+    },
+    "hot_water_tank_location": {
+        "address": {
+            "h2k": "TankLocation,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,Location"
+        },
+        "map": {
+            "Main floor": "conditioned space",
+            "Basement": "basement - conditioned",
+            "Attic": "attic - vented",
+            "Crawl space": "CRAWLSPACE",
+            "Garage": "garage",
+            "Porch": "other exterior",
+            "Outside": "other exterior"
+        },
+        "hpxml_opts": [
+            "conditioned space",
+            "basement - unconditioned",
+            "basement - conditioned",
+            "attic - unvented",
+            "attic - vented",
+            "garage",
+            "crawlspace - unvented",
+            "crawlspace - vented",
+            "crawlspace - conditioned",
+            "other exterior", 
+            "other housing unit", 
+            "other heated space", 
+            "other multifamily buffer space", 
+            "other non-freezing space"
+        ],
+        "default": "conditioned space"
+    },
+    "hot_water_uef_draw_pattern": {
+        "address": {
+            "h2k": "DrawPattern,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,UsageBin"
+        },
+        "map": {
+            "Very-small-usage 38 L (10 US gal)": "very small",
+            "Low-usage 144 L (38 US gal)": "low",
+            "Medium-usage 208 L (55 US gal)": "medium",
+            "High-usage 318 L (84 US gal)": "high"
+        },
+        "hpxml_opts": [
+            "very small",
+            "low",
+            "medium",
+            "high"
+        ],
+        "default": "medium"
     }
 }
+

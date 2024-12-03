@@ -35,6 +35,9 @@ def get_systems(h2k_dict, model_data):
     model_data.set_system_id({"primary_heating": "HeatingSystem1"})
     model_data.set_system_id({"air_conditioner": "CoolingSystem1"})
     model_data.set_system_id({"hvac_distribution": "HVACDistribution1"})
+    model_data.set_system_id({"primary_dhw": "WaterHeatingSystem1"})
+    model_data.set_system_id({"secondary_dhw": "WaterHeatingSystem2"})
+    model_data.set_system_id({"dhw_distribution": "HotWaterDistribution1"})
 
     # Primary heating system as a component of the HVACPlant Section
     primary_heating_result = get_primary_heating_system(h2k_dict, model_data)
@@ -75,8 +78,6 @@ def get_systems(h2k_dict, model_data):
 
     hot_water_distribution_result = get_hot_water_distribution(h2k_dict, model_data)
     water_fixtures_result = get_water_fixtures(h2k_dict, model_data)
-
-    print(water_fixtures_result)
 
     dhw_dict = {
         "WaterHeatingSystem": hot_water_system_result,

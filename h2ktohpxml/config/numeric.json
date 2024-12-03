@@ -634,5 +634,83 @@
         },
         "decimals": 2,
         "default": 2.5
+    },
+    "hot_water_tank_volume": {
+        "address": {
+            "h2k": "TankVolume,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,TankVolume"
+        },
+        "units": {
+            "unit_type": "volume",
+            "h2k_units": "L",
+            "hpxml_units": "gal_us"
+        },
+        "decimals": 1,
+        "default": 50
+    },
+    "hot_water_load_fraction": {
+        "address": {
+            "h2k": "@fraction",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,FractionDHWLoadServed"
+        },
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "default": 1
+    },
+    "hot_water_heating_capacity": {
+        "address": {
+            "h2k": "EnergyFactor,@inputCapacity",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,HeatingCapacity"
+        },
+        "units": {
+            "unit_type": "power",
+            "h2k_units": "W",
+            "hpxml_units": "BTU/h"
+        },
+        "decimals": 2,
+        "default": 0
+    },
+    "hot_water_energy_factor": {
+        "address": {
+            "h2k": "EnergyFactor,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,EnergyFactor"
+        },
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 4,
+        "default": 0.9
+    },
+    "hot_water_heat_pump_cop": {
+        "address": {
+            "h2k": "@heatPumpCoefficient",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,EnergyFactor"
+        },
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "default": 0
+    },
+    "hot_water_temperature": {
+        "address": {
+            "h2k": "HouseFile,House,BaseLoads,WaterUsage,@temperature",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,HotWaterTemperature"
+        },
+        "units": {
+            "unit_type": "temperature",
+            "h2k_units": "C",
+            "hpxml_units": "F"
+        },
+        "decimals": 1,
+        "default": 125
     }
 }

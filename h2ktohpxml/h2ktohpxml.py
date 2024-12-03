@@ -318,7 +318,7 @@ def h2ktohpxml(h2k_string="", config={}):
     # ================ 8. HPXML Section: Systems ================
     systems_results = get_systems(h2k_dict, model_data)
     hvac_dict = systems_results["hvac_dict"]
-    # dhw_dict = systems_results["dhw_dict"]
+    dhw_dict = systems_results["dhw_dict"]
 
     # only update the heating system from the template if we've translated the h2k into a valid object
     if model_data.get_is_hvac_translated():
@@ -330,6 +330,18 @@ def h2ktohpxml(h2k_string="", config={}):
         model_data.add_warning_message(
             {
                 "message": "The h2k file contains an HVAC system that is not supported by the translation process. The default HVAC section from the template was used in the output HPXML file."
+            }
+        )
+
+    if model_data.get_is_dhw_translated():
+        hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"][
+            "WaterHeating"
+        ] = dhw_dict
+    else:
+        # Add warning/error
+        model_data.add_warning_message(
+            {
+                "message": "The h2k file contains a DHW system that is not supported by the translation process. The default DHW section from the template was used in the output HPXML file."
             }
         )
 
