@@ -24,7 +24,8 @@ class ModelData:
         # Tracking info for Systems
         self.is_hvac_translated = False
         self.is_dhw_translated = False
-        self.hvac_distribution_type = None
+        self.heating_distribution_type = None
+        self.ac_hp_distribution_type = None
         self.system_ids = {"primary_heating": "HeatingSystem1"}
 
         # Tracking errors
@@ -160,11 +161,17 @@ class ModelData:
     def get_is_dhw_translated(self):
         return self.is_dhw_translated
 
-    def set_hvac_distribution_type(self, val):
-        self.hvac_distribution_type = val
+    def set_heating_distribution_type(self, val):
+        self.heating_distribution_type = val
 
-    def get_hvac_distribution_type(self):
-        return self.hvac_distribution_type
+    def get_heating_distribution_type(self):
+        return self.heating_distribution_type
+
+    def set_ac_hp_distribution_type(self, val):
+        self.ac_hp_distribution_type = val
+
+    def get_ac_hp_distribution_type(self):
+        return self.ac_hp_distribution_type
 
     # tracking hvac system ids
 

@@ -37,7 +37,10 @@ def get_systems(h2k_dict, model_data):
     model_data.set_system_id({"primary_heating": "HeatingSystem1"})
     model_data.set_system_id({"air_conditioner": "CoolingSystem1"})
     model_data.set_system_id({"heat_pump": "HeatPump1"})
-    model_data.set_system_id({"hvac_distribution": "HVACDistribution1"})
+    model_data.set_system_id({"hvac_air_distribution": "HVACAirDistribution1"})
+    model_data.set_system_id(
+        {"hvac_hydronic_distribution": "HVACHydronicDistribution1"}
+    )
     model_data.set_system_id({"primary_dhw": "WaterHeatingSystem1"})
     model_data.set_system_id({"secondary_dhw": "WaterHeatingSystem2"})
     model_data.set_system_id({"dhw_distribution": "HotWaterDistribution1"})

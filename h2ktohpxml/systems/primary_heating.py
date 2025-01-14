@@ -151,7 +151,7 @@ def get_furnace(type1_data, model_data):
     # TODO: confirm desired behaviour around auto-sizing
     furnace_dict = {
         "SystemIdentifier": {"@id": model_data.get_system_id("primary_heating")},
-        "DistributionSystem": {"@idref": model_data.get_system_id("hvac_distribution")},
+        "DistributionSystem": {"@idref": model_data.get_system_id("hvac_air_distribution")},
         "HeatingSystemType": {
             "Furnace": None
         },  # potential to add pilot light info later
@@ -185,7 +185,7 @@ def get_furnace(type1_data, model_data):
 
     # No h2k representation for "gravity" distribution type
     # Might need to update this based on logic around system types
-    model_data.set_hvac_distribution_type("air_regular velocity")
+    model_data.set_heating_distribution_type("air_regular velocity")
 
     return furnace_dict
 
@@ -227,7 +227,7 @@ def get_boiler(type1_data, model_data):
     # TODO: confirm desired behaviour around auto-sizing
     boiler_dict = {
         "SystemIdentifier": {"@id": model_data.get_system_id("primary_heating")},
-        "DistributionSystem": {"@idref": model_data.get_system_id("hvac_distribution")},
+        "DistributionSystem": {"@idref": model_data.get_system_id("hvac_hydronic_distribution")},
         "HeatingSystemType": {
             "Boiler": None
         },  # potential to add pilot light info later
@@ -264,7 +264,7 @@ def get_boiler(type1_data, model_data):
     # Might need to update this based on logic around system types
     # TODO: change distribution type to "radiant floor" if in-floor is defined
     # Option to use air_fan coil if boiler has a shared water loop with a heat pump
-    model_data.set_hvac_distribution_type("hydronic_radiator")
+    model_data.set_heating_distribution_type("hydronic_radiator")
 
     return boiler_dict
 

@@ -9,8 +9,6 @@ def get_heat_pump(h2k_dict, model_data):
 
     type2_heating_system = obj.get_val(h2k_dict, "HouseFile,House,HeatingCooling,Type2")
 
-    print(type2_heating_system)
-
     # h2k files cannot be built without a Type 1 heating system, so we don't need to check for the presence of one
     type2_type = [
         x for x in list(type2_heating_system.keys()) if x != "@shadingInF280Cooling"
@@ -99,7 +97,7 @@ def get_heat_pump(h2k_dict, model_data):
 
     elif type2_type == "GroundHeatPump":
         print("GSHP DETECTED")
-        print(type2_data)
+        # print(type2_data)
 
         # TODO: Check if we ever need more logic around distribution system splitting
         # TODO: separate back-up needs switchover temperature information "BackupHeatingSwitchoverTemperature"
@@ -108,7 +106,7 @@ def get_heat_pump(h2k_dict, model_data):
         heat_pump_dict = {
             "SystemIdentifier": {"@id": model_data.get_system_id("heat_pump")},
             "DistributionSystem": {
-                "@idref": model_data.get_system_id("hvac_distribution")
+                "@idref": model_data.get_system_id("hvac_air_distribution")
             },
             "HeatPumpType": "ground-to-air",
             "HeatPumpFuel": "electricity",
@@ -157,6 +155,8 @@ def get_heat_pump(h2k_dict, model_data):
             },
             # extension
         }
+
+        model_data.set_ac_hp_distribution_type("air_regular velocity")
 
     # print("NO HEAT PUMP")
 
