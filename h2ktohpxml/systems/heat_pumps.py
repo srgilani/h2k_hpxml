@@ -45,7 +45,6 @@ def get_heat_pump(h2k_dict, model_data):
         hp_cooling_eer = -0.02 * (hp_cooling_eff**2) + 1.12 * hp_cooling_eff
 
     # Get backup system details
-    # TODO: handle separate and integrated properly
     heat_pump_backup_type = model_data.get_building_detail(
         "heat_pump_backup_type"
     )  # "separate" or "integrated"
@@ -63,9 +62,36 @@ def get_heat_pump(h2k_dict, model_data):
     heat_pump_backup_capacity = model_data.get_building_detail(
         "heat_pump_backup_capacity"
     )
+    heat_pump_backup_system_id = model_data.get_building_detail(
+        "heat_pump_backup_system_id"
+    )
+
+    # Get switchover information
+    switchover_type = h2k.get_selection_field(type2_data, "heat_pump_switchover_type")
+    switchover_temp = -7.6  # -22C
+    if switchover_type == "restricted":
+        switchover_temp = h2k.get_number_field(type2_data, "heat_pump_switchover_temp")
+    elif switchover_type == "unrestricted":
+        switchover_temp = -40  # -40C, placeholder value to prevent switchover
+    elif switchover_type == "balance":
+        # Use default behaviour depending on different heat pump types (until comparison testing between the two engines)
+        pass
 
     heat_pump_dict = {}
     if type2_type == "AirHeatPump":
+        # Default backup logic for central ASHP
+        # If neither CompressorLockoutTemperature nor BackupHeatingSwitchoverTemperature provided,
+        # CompressorLockoutTemperature defaults to 25F if fossil fuel backup
+        # otherwise -20F if CompressorType is “variable speed” otherwise 0F.
+
+        # Default backup logic for mini split ASHP
+        # If neither CompressorLockoutTemperature nor BackupHeatingSwitchoverTemperature provided,
+        # CompressorLockoutTemperature defaults to 25F if fossil fuel backup otherwise -20F.
+
+        # Default backup logic for packaged terminal ASHP
+        # If neither CompressorLockoutTemperature nor BackupHeatingSwitchoverTemperature provided,
+        # CompressorLockoutTemperature defaults to 25F if fossil fuel backup otherwise 0F.
+
         print("ASHP DETECTED")
 
     elif type2_type == "WaterHeatPump":
@@ -76,6 +102,9 @@ def get_heat_pump(h2k_dict, model_data):
         print(type2_data)
 
         # TODO: Check if we ever need more logic around distribution system splitting
+        # TODO: separate back-up needs switchover temperature information "BackupHeatingSwitchoverTemperature"
+
+        # A separate backup is used if the primary heating system type is a baseboard, boiler, stove, or fireplace, integrated if furnace.
         heat_pump_dict = {
             "SystemIdentifier": {"@id": model_data.get_system_id("heat_pump")},
             "DistributionSystem": {
@@ -86,17 +115,36 @@ def get_heat_pump(h2k_dict, model_data):
             # "HeatingCapacity": hp_capacity,  # TODO: autosized
             # "CoolingCapacity": hp_capacity,  # TODO: autosized
             "CoolingSensibleHeatFraction": 0.76,  # TODO: tie to file
-            # "BackupType": heat_pump_backup_type,  # Assumed to be integrated for now
-            # "BackupSystemFuel": heat_pump_backup_fuel,
-            # "BackupAnnualHeatingEfficiency": {
-            #     "Units": heat_pump_backup_eff_unit,
-            #     "Value": heat_pump_backup_efficiency,
-            # },
-            # **(
-            #     {}
-            #     if heat_pump_backup_autosized
-            #     else {"BackupHeatingCapacity": heat_pump_backup_capacity}
-            # ),
+            **(
+                {
+                    "BackupType": "separate",
+                    "BackupSystem": {"@idref": heat_pump_backup_system_id},
+                }
+                if heat_pump_backup_type == "separate"
+                else {}
+            ),
+            **(
+                {
+                    "BackupType": "integrated",
+                    "BackupSystemFuel": heat_pump_backup_fuel,
+                    "BackupAnnualHeatingEfficiency": {
+                        "Units": heat_pump_backup_eff_unit,
+                        "Value": heat_pump_backup_efficiency,
+                    },
+                    **(
+                        {}
+                        if heat_pump_backup_autosized
+                        else {"BackupHeatingCapacity": heat_pump_backup_capacity}
+                    ),
+                    **(
+                        {}
+                        if switchover_type == "balance"
+                        else {"BackupHeatingSwitchoverTemperature": switchover_temp}
+                    ),
+                }
+                if heat_pump_backup_type == "integrated"
+                else {}
+            ),
             "FractionHeatLoadServed": 1,
             "FractionCoolLoadServed": 1,
             "AnnualCoolingEfficiency": {

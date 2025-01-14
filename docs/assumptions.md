@@ -26,6 +26,8 @@
 - Electric auxiliary energy (330 kWh/y for oil and 170 kWh/y for gas) overwritten with 0 kWh/year for boilers because no discernible difference in consumption is observed between homes with furnaces vs boilers in h2k. 
 - Hot water heating capcity will use the "input capacity" field in the hot water section if it's present. However, this field isn't always present. It's also within a section of the hot water screen called "Standby", so it's unclear if this field has the same interpretation as HPXML
 - Using HPXML's built-in assumptions about hot water distribution pipe length
+- HPXML requires the fraction of hot water heating load provided by solar thermal (if present). This information is only available in the results section of the h2k file. As such, files that include solar thermal systems must include results, otherwise a warning will be flagged. The fraction is calculated as the primary DHW system consumption (always solar) divided by the primary + secondary consumption.
+- Unrestricted GSHP/WSHP cutoffs are enforced by applying a switchover temp of -40C
 
 
 ### Field Assumptions:

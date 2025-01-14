@@ -502,6 +502,23 @@
             "high"
         ],
         "default": "medium"
+    },
+    "heat_pump_switchover_type": {
+        "address": {
+            "h2k": "Temperature,CutoffType,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,BackupHeatingSwitchoverTemperature"
+        },
+        "map": {
+            "Balance point": "balance",
+            "Restricted": "restricted",
+            "Unrestricted": "unrestricted"
+        },
+        "hpxml_opts": [
+            "balance",
+            "restricted",
+            "unrestricted"
+        ],
+        "default": "balance"
     }
 }
 

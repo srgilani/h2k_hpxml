@@ -511,6 +511,13 @@
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingCapacity"
         }
     },
+    "baseboard_sizing_factor": {
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,@sizingFactor",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,extension,HeatingAutosizingFactor"
+        }
+    },
     "baseboard_efficiency": {
         "units": {
             "unit_type": "fraction",
@@ -749,6 +756,18 @@
         "address": {
             "h2k": "Specifications,OutputCapacity,@value",
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,HeatingCapacity"
+        }
+    },
+    "heat_pump_switchover_temp": {
+        "units": {
+            "unit_type": "temperature",
+            "h2k_units": "C",
+            "hpxml_units": "F"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Temperature,CutoffType,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,BackupHeatingSwitchoverTemperature"
         }
     }
 }

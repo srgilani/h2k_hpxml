@@ -66,6 +66,14 @@ def get_electric_resistance(type1_data, model_data):
     baseboard_capacity = h2k.get_number_field(type1_data, "baseboard_capacity")
     baseboard_efficiency = h2k.get_number_field(type1_data, "baseboard_efficiency")
 
+    baseboard_sizing_factor = h2k.get_number_field(
+        type1_data, "baseboard_sizing_factor"
+    )
+    is_auto_sized = (
+        "Calculated" == obj.get_val(type1_data, "Specifications,OutputCapacity,English")
+        or baseboard_capacity == 0
+    )
+
     model_data.set_building_details(
         {
             "heat_pump_backup_type": "separate",
@@ -73,7 +81,7 @@ def get_electric_resistance(type1_data, model_data):
             "heat_pump_backup_fuel": "electricity",
             "heat_pump_backup_efficiency": baseboard_efficiency,
             "heat_pump_backup_eff_unit": "Percent",
-            "heat_pump_backup_autosized": False,
+            "heat_pump_backup_autosized": is_auto_sized,
             "heat_pump_backup_capacity": baseboard_capacity,
             "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
         }
@@ -87,12 +95,17 @@ def get_electric_resistance(type1_data, model_data):
             "ElectricResistance": {"ElectricDistribution": "baseboard"}
         },
         "HeatingSystemFuel": "electricity",
-        "HeatingCapacity": baseboard_capacity,
+        **({} if is_auto_sized else {"HeatingCapacity": baseboard_capacity}),
         "AnnualHeatingEfficiency": {
             "Units": "Percent",  # Only unit type allowed here. Note actual value must be a fraction
             "Value": baseboard_efficiency,
         },
         "FractionHeatLoadServed": 1,  # Hardcoded for now
+        **(
+            {"extension": {"HeatingAutosizingFactor": baseboard_sizing_factor}}
+            if is_auto_sized
+            else {}
+        ),
     }
 
     # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
@@ -272,6 +285,19 @@ def get_fireplace(type1_data, model_data):
 
     fireplace_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
 
+    model_data.set_building_details(
+        {
+            "heat_pump_backup_type": "separate",
+            "heat_pump_backup_system": "fireplace",
+            "heat_pump_backup_fuel": fireplace_fuel_type,
+            "heat_pump_backup_efficiency": fireplace_efficiency,
+            "heat_pump_backup_eff_unit": "Percent" if is_steady_state else "AFUE",
+            "heat_pump_backup_autosized": is_auto_sized,
+            "heat_pump_backup_capacity": fireplace_capacity,
+            "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+        }
+    )
+
     # TODO: confirm desired behaviour around auto-sizing
     fireplace_dict = {
         "SystemIdentifier": {"@id": model_data.get_system_id("primary_heating")},
@@ -313,6 +339,19 @@ def get_stove(type1_data, model_data):
     )
 
     stove_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
+
+    model_data.set_building_details(
+        {
+            "heat_pump_backup_type": "separate",
+            "heat_pump_backup_system": "stove",
+            "heat_pump_backup_fuel": stove_fuel_type,
+            "heat_pump_backup_efficiency": stove_efficiency,
+            "heat_pump_backup_eff_unit": "Percent" if is_steady_state else "AFUE",
+            "heat_pump_backup_autosized": is_auto_sized,
+            "heat_pump_backup_capacity": stove_capacity,
+            "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+        }
+    )
 
     # TODO: confirm desired behaviour around auto-sizing
     stove_dict = {
