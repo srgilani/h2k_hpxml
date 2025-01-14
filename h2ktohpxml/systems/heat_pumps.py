@@ -20,27 +20,49 @@ def get_heat_pump(h2k_dict, model_data):
     type2_data = type2_heating_system.get(type2_type, {})
 
     # Get common specs
+    cooling_sensible_heat_fraction = h2k.get_number_field(
+        type2_data, "cooling_sensible_heat_fraction"
+    )
     hp_heating_eff = h2k.get_number_field(type2_data, "heat_pump_heating_efficiency")
     hp_cooling_eff = h2k.get_number_field(type2_data, "heat_pump_cooling_efficiency")
     hp_capacity = h2k.get_number_field(type2_data, "heat_pump_capacity")
+    is_auto_sized = (
+        "Calculated" == obj.get_val(type2_data, "Specifications,OutputCapacity,English")
+        or hp_capacity == 0
+    )
 
     is_heating_cop = (
         obj.get_val(type2_data, "Specifications,HeatingEfficiency,@isCop") == "true"
     )
+
     is_cooling_cop = (
         obj.get_val(type2_data, "Specifications,CoolingEfficiency,@isCop") == "true"
     )
 
-    if is_heating_cop:
-        hp_heating_cop = hp_heating_eff
-    else:
-        hp_heating_cop = hp_heating_eff * (1 / 3.412)
+    # H2k's conversions:
+    # COP = hspf * 0.376 + 0.78
+    # COP = seer * 0.115 + 1.428;
 
-    if is_cooling_cop:
-        hp_cooling_eer = hp_cooling_eff * 3.412
+    # Need heating efficiency in either HSPF or COP
+    if is_heating_cop:
+        # Heating provided in COP
+        hp_heating_cop = hp_heating_eff
+        hp_heating_hspf = (hp_heating_eff - 0.78) / 0.376
     else:
+        # Heating provided in HSPF
+        hp_heating_cop = hp_heating_eff * 0.376 + 0.78
+        hp_heating_hspf = hp_heating_eff
+
+    # Need cooling efficiency in either SEER or EER
+    if is_cooling_cop:
+        # Cooling provided in COP
+        hp_cooling_eer = hp_cooling_eff * 3.412
+        hp_cooling_seer = (hp_cooling_eff + 1.428) / 0.115
+    else:
+        # Cooling provided in SEER
         # TODO: in v11.13, we can use the raw value here because they moved from SEER to EER
         hp_cooling_eer = -0.02 * (hp_cooling_eff**2) + 1.12 * hp_cooling_eff
+        hp_cooling_seer = hp_cooling_eff
 
     # Get backup system details
     heat_pump_backup_type = model_data.get_building_detail(
@@ -92,15 +114,315 @@ def get_heat_pump(h2k_dict, model_data):
 
         print("ASHP DETECTED")
 
+        air_heat_pump_equip_type = h2k.get_selection_field(
+            type2_data, "air_heat_pump_equip_type"
+        )
+
+        print(air_heat_pump_equip_type)
+        if air_heat_pump_equip_type == "mini-split":
+            # Defaults for determining low-temp heat pump capacity:
+            # If neither extension/HeatingCapacityRetention nor HeatingCapacity17F nor HeatingDetailedPerformanceData provided, heating capacity retention defaults to 0.0461 * HSPF + 0.1594 (at 5F).
+
+            heat_pump_dict = {
+                "SystemIdentifier": {"@id": model_data.get_system_id("heat_pump")},
+                "HeatPumpType": "mini-split",
+                "HeatPumpFuel": "electricity",
+                **({} if is_auto_sized else {"HeatingCapacity": hp_capacity}),
+                # "HeatingCapacity17F": None, #could be included here if we had the info
+                **({} if is_auto_sized else {"CoolingCapacity": hp_capacity}),
+                # "CompressorType": "single stage", #Using HPXML's built-in defaulting at the moment
+                # defaults to “single stage” if SEER <= 15, else “two stage” if SEER <= 21, else “variable speed”.
+                "CoolingSensibleHeatFraction": cooling_sensible_heat_fraction,
+                **(
+                    {
+                        "BackupType": "separate",
+                        "BackupSystem": {"@idref": heat_pump_backup_system_id},
+                        **(
+                            {}
+                            if switchover_type == "balance"
+                            else {"BackupHeatingSwitchoverTemperature": switchover_temp}
+                        ),
+                    }
+                    if heat_pump_backup_type == "separate"
+                    else {}
+                ),
+                **(
+                    {
+                        "BackupType": "integrated",
+                        "BackupSystemFuel": heat_pump_backup_fuel,
+                        "BackupAnnualHeatingEfficiency": {
+                            "Units": heat_pump_backup_eff_unit,
+                            "Value": heat_pump_backup_efficiency,
+                        },
+                        **(
+                            {}
+                            if heat_pump_backup_autosized
+                            else {"BackupHeatingCapacity": heat_pump_backup_capacity}
+                        ),
+                        **(
+                            {}
+                            if switchover_type == "balance"
+                            else {"BackupHeatingSwitchoverTemperature": switchover_temp}
+                        ),
+                    }
+                    if heat_pump_backup_type == "integrated"
+                    else {}
+                ),
+                "FractionHeatLoadServed": 1,
+                "FractionCoolLoadServed": 1,
+                "AnnualCoolingEfficiency": {
+                    "Units": "SEER",  # only option
+                    "Value": round(hp_cooling_seer, 2),
+                },
+                "AnnualHeatingEfficiency": {
+                    "Units": "HSPF",  # only option
+                    "Value": round(hp_heating_hspf, 2),
+                },
+                # extension
+                **(
+                    {
+                        "extension": {
+                            "HeatingAutosizingFactor": 1,
+                            "CoolingAutosizingFactor": 1,
+                        }
+                    }
+                    if is_auto_sized
+                    else {}
+                ),
+            }
+
+        elif air_heat_pump_equip_type == "packaged terminal heat pump":
+            # Defaults for determining low-temp heat pump capacity: Same as mini split based on code
+
+            heat_pump_dict = {
+                "SystemIdentifier": {"@id": model_data.get_system_id("heat_pump")},
+                "HeatPumpType": "packaged terminal heat pump",
+                "HeatPumpFuel": "electricity",
+                **({} if is_auto_sized else {"HeatingCapacity": hp_capacity}),
+                # "HeatingCapacity17F": None, #could be included here if we had the info
+                **({} if is_auto_sized else {"CoolingCapacity": hp_capacity}),
+                # "CompressorType": "single stage", #Using HPXML's built-in defaulting at the moment
+                # defaults to “single stage” if SEER <= 15, else “two stage” if SEER <= 21, else “variable speed”.
+                "CoolingSensibleHeatFraction": cooling_sensible_heat_fraction,
+                **(
+                    {
+                        "BackupType": "separate",
+                        "BackupSystem": {"@idref": heat_pump_backup_system_id},
+                        **(
+                            {}
+                            if switchover_type == "balance"
+                            else {"BackupHeatingSwitchoverTemperature": switchover_temp}
+                        ),
+                    }
+                    if heat_pump_backup_type == "separate"
+                    else {}
+                ),
+                **(
+                    {
+                        "BackupType": "integrated",
+                        "BackupSystemFuel": heat_pump_backup_fuel,
+                        "BackupAnnualHeatingEfficiency": {
+                            "Units": heat_pump_backup_eff_unit,
+                            "Value": heat_pump_backup_efficiency,
+                        },
+                        **(
+                            {}
+                            if heat_pump_backup_autosized
+                            else {"BackupHeatingCapacity": heat_pump_backup_capacity}
+                        ),
+                        **(
+                            {}
+                            if switchover_type == "balance"
+                            else {"BackupHeatingSwitchoverTemperature": switchover_temp}
+                        ),
+                    }
+                    if heat_pump_backup_type == "integrated"
+                    else {}
+                ),
+                "FractionHeatLoadServed": 1,
+                "FractionCoolLoadServed": 1,
+                "AnnualCoolingEfficiency": {
+                    "Units": "SEER",  # only option
+                    "Value": round(hp_cooling_seer, 2),
+                },
+                "AnnualHeatingEfficiency": {
+                    "Units": "HSPF",  # only option
+                    "Value": round(hp_heating_hspf, 2),
+                },
+                # extension
+                **(
+                    {
+                        "extension": {
+                            "HeatingAutosizingFactor": 1,
+                            "CoolingAutosizingFactor": 1,
+                        }
+                    }
+                    if is_auto_sized
+                    else {}
+                ),
+            }
+
+        else:
+            # air-to-air
+            # Defaults for determining low-temp heat pump capacity:
+            # If neither extension/HeatingCapacityRetention nor HeatingCapacity17F nor HeatingDetailedPerformanceData provided, heating capacity retention defaults based on CompressorType:
+            # - single/two stage: 0.425 (at 5F)
+            # - variable speed: 0.0461 * HSPF + 0.1594 (at 5F)
+
+            heat_pump_dict = {
+                "SystemIdentifier": {"@id": model_data.get_system_id("heat_pump")},
+                "DistributionSystem": {
+                    "@idref": model_data.get_system_id("hvac_air_distribution")
+                },
+                "HeatPumpType": "air-to-air",
+                "HeatPumpFuel": "electricity",
+                **({} if is_auto_sized else {"HeatingCapacity": hp_capacity}),
+                # "HeatingCapacity17F": None, #could be included here if we had the info
+                **({} if is_auto_sized else {"CoolingCapacity": hp_capacity}),
+                # "CompressorType": "single stage", #Using HPXML's built-in defaulting at the moment
+                # defaults to “single stage” if SEER <= 15, else “two stage” if SEER <= 21, else “variable speed”.
+                "CoolingSensibleHeatFraction": cooling_sensible_heat_fraction,
+                **(
+                    {
+                        "BackupType": "separate",
+                        "BackupSystem": {"@idref": heat_pump_backup_system_id},
+                        **(
+                            {}
+                            if switchover_type == "balance"
+                            else {"BackupHeatingSwitchoverTemperature": switchover_temp}
+                        ),
+                    }
+                    if heat_pump_backup_type == "separate"
+                    else {}
+                ),
+                **(
+                    {
+                        "BackupType": "integrated",
+                        "BackupSystemFuel": heat_pump_backup_fuel,
+                        "BackupAnnualHeatingEfficiency": {
+                            "Units": heat_pump_backup_eff_unit,
+                            "Value": heat_pump_backup_efficiency,
+                        },
+                        **(
+                            {}
+                            if heat_pump_backup_autosized
+                            else {"BackupHeatingCapacity": heat_pump_backup_capacity}
+                        ),
+                        **(
+                            {}
+                            if switchover_type == "balance"
+                            else {"BackupHeatingSwitchoverTemperature": switchover_temp}
+                        ),
+                    }
+                    if heat_pump_backup_type == "integrated"
+                    else {}
+                ),
+                "FractionHeatLoadServed": 1,
+                "FractionCoolLoadServed": 1,
+                "AnnualCoolingEfficiency": {
+                    "Units": "SEER",  # only option
+                    "Value": round(hp_cooling_seer, 2),
+                },
+                "AnnualHeatingEfficiency": {
+                    "Units": "HSPF",  # only option
+                    "Value": round(hp_heating_hspf, 2),
+                },
+                # extension
+                **(
+                    {
+                        "extension": {
+                            "HeatingAutosizingFactor": 1,
+                            "CoolingAutosizingFactor": 1,
+                        }
+                    }
+                    if is_auto_sized
+                    else {}
+                ),
+            }
+
+            model_data.set_ac_hp_distribution_type("air_regular velocity")
+
     elif type2_type == "WaterHeatPump":
         print("WSHP DETECTED")
+
+        # TODO: Determine if we should be using the "water-loop-to-air" system here or handling like a GSHP
+
+        # A separate backup is used if the primary heating system type is a baseboard, boiler, stove, or fireplace, integrated if furnace.
+        heat_pump_dict = {
+            "SystemIdentifier": {"@id": model_data.get_system_id("heat_pump")},
+            "DistributionSystem": {
+                "@idref": model_data.get_system_id("hvac_air_distribution")
+            },
+            "HeatPumpType": "water-loop-to-air",
+            "HeatPumpFuel": "electricity",
+            **({} if is_auto_sized else {"HeatingCapacity": hp_capacity}),
+            **({} if is_auto_sized else {"CoolingCapacity": hp_capacity}),
+            # Not included in water-loop-to-air HPs
+            # "CoolingSensibleHeatFraction": cooling_sensible_heat_fraction,
+            **(
+                {
+                    "BackupType": "separate",
+                    "BackupSystem": {"@idref": heat_pump_backup_system_id},
+                    **(
+                        {}
+                        if switchover_type == "balance"
+                        else {"BackupHeatingSwitchoverTemperature": switchover_temp}
+                    ),
+                }
+                if heat_pump_backup_type == "separate"
+                else {}
+            ),
+            **(
+                {
+                    "BackupType": "integrated",
+                    "BackupSystemFuel": heat_pump_backup_fuel,
+                    "BackupAnnualHeatingEfficiency": {
+                        "Units": heat_pump_backup_eff_unit,
+                        "Value": heat_pump_backup_efficiency,
+                    },
+                    **(
+                        {}
+                        if heat_pump_backup_autosized
+                        else {"BackupHeatingCapacity": heat_pump_backup_capacity}
+                    ),
+                    **(
+                        {}
+                        if switchover_type == "balance"
+                        else {"BackupHeatingSwitchoverTemperature": switchover_temp}
+                    ),
+                }
+                if heat_pump_backup_type == "integrated"
+                else {}
+            ),
+            # Not included in water-loop-to-air HPs
+            # "FractionHeatLoadServed": 1,
+            # "FractionCoolLoadServed": 1,
+            "AnnualCoolingEfficiency": {
+                "Units": "EER",  # only option
+                "Value": round(hp_cooling_eer, 2),
+            },
+            "AnnualHeatingEfficiency": {
+                "Units": "COP",  # only option
+                "Value": round(hp_heating_cop, 2),
+            },
+            # extension
+            **(
+                {
+                    "extension": {
+                        "HeatingAutosizingFactor": 1,
+                        "CoolingAutosizingFactor": 1,
+                    }
+                }
+                if is_auto_sized
+                else {}
+            ),
+        }
+
+        model_data.set_ac_hp_distribution_type("air_regular velocity")
 
     elif type2_type == "GroundHeatPump":
         print("GSHP DETECTED")
         # print(type2_data)
-
-        # TODO: Check if we ever need more logic around distribution system splitting
-        # TODO: separate back-up needs switchover temperature information "BackupHeatingSwitchoverTemperature"
 
         # A separate backup is used if the primary heating system type is a baseboard, boiler, stove, or fireplace, integrated if furnace.
         heat_pump_dict = {
@@ -110,13 +432,18 @@ def get_heat_pump(h2k_dict, model_data):
             },
             "HeatPumpType": "ground-to-air",
             "HeatPumpFuel": "electricity",
-            # "HeatingCapacity": hp_capacity,  # TODO: autosized
-            # "CoolingCapacity": hp_capacity,  # TODO: autosized
-            "CoolingSensibleHeatFraction": 0.76,  # TODO: tie to file
+            **({} if is_auto_sized else {"HeatingCapacity": hp_capacity}),
+            **({} if is_auto_sized else {"CoolingCapacity": hp_capacity}),
+            "CoolingSensibleHeatFraction": cooling_sensible_heat_fraction,
             **(
                 {
                     "BackupType": "separate",
                     "BackupSystem": {"@idref": heat_pump_backup_system_id},
+                    **(
+                        {}
+                        if switchover_type == "balance"
+                        else {"BackupHeatingSwitchoverTemperature": switchover_temp}
+                    ),
                 }
                 if heat_pump_backup_type == "separate"
                 else {}
@@ -154,6 +481,16 @@ def get_heat_pump(h2k_dict, model_data):
                 "Value": round(hp_heating_cop, 2),
             },
             # extension
+            **(
+                {
+                    "extension": {
+                        "HeatingAutosizingFactor": 1,
+                        "CoolingAutosizingFactor": 1,
+                    }
+                }
+                if is_auto_sized
+                else {}
+            ),
         }
 
         model_data.set_ac_hp_distribution_type("air_regular velocity")

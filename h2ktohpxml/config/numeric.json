@@ -769,5 +769,13 @@
             "h2k": "Temperature,CutoffType,@value",
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,BackupHeatingSwitchoverTemperature"
         }
+    },
+    "cooling_sensible_heat_fraction": {
+        "decimals": 2,
+        "address": {
+            "h2k": "CoolingParameters,@sensibleHeatRatio",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,CoolingSensibleHeatFraction"
+        }
+        
     }
 }

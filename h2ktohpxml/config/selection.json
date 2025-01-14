@@ -519,6 +519,26 @@
             "unrestricted"
         ],
         "default": "balance"
+    },
+    "air_heat_pump_equip_type": {
+        "address": {
+            "h2k": "Equipment,Type,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,HeatPumpType"
+        },
+        "map": {
+            "Central split system": "air-to-air",
+            "Central single package system": "packaged terminal heat pump",
+            "Mini-split ductless": "mini-split",
+            "Ductless Mini- or Multi-split system": "mini-split",
+            "Compact Ducted Mini- or Multi-split system": "mini-split",
+            "Coils Only": "air-to-air"
+        },
+        "hpxml_opts": [
+            "air-to-air",
+            "packaged terminal heat pump",
+            "mini-split"
+        ],
+        "default": "air-to-air"
     }
 }
 
