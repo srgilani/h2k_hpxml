@@ -18,3 +18,9 @@ This method requires testing with houses having:
 Error message: "Error: Expected ConditionedFloorArea to be greater than or equal to the sum of conditioned slab/floor areas."
 This error message means that we cannot include floors above a basement in the model. 
 However, the workflow does require a floor above a crawlspace.
+
+
+#### Low temperature ASHP capacity
+HPXML has an input for the heat pump capacity at 17F (-8.33C), but h2k files don't contain this information. The default HPXML derate is used at this time:
+- single/two stage: 0.425 (at 5F)
+- variable speed: 0.0461 * HSPF + 0.1594 (at 5F)
