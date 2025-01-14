@@ -29,7 +29,7 @@ def run_hpxml_os(file="", path=""):
         result = subprocess.run(
             f"openstudio workflow/run_simulation.rb -x {path}/{file} {flags}",
             cwd=hpxml_os_path,
-            check=True
+            check=True,
             # capture_output=True,
             # text=True,
         )

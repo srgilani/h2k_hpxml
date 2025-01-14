@@ -359,6 +359,28 @@
         ],
         "default": "electricity"
     },
+    "furnace_equip_type": {
+        "address": {
+            "h2k": "Equipment,EquipmentType,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingSystemType"
+        },
+        "map": {
+            "Advanced airtight wood stove": "stove",
+            "1st option with catalytic converter": "stove",
+            "Conventional furnace": "furnace",
+            "Conventional stove": "stove",
+            "Pellet stove": "stove",
+            "Masonry heater": "fireplace",
+            "Conventional fireplace": "fireplace",
+            "Fireplace insert": "fireplace"
+        },
+        "hpxml_opts": [
+            "stove",
+            "fireplace",
+            "furnace"
+        ],
+        "default": "furnace"
+    },
     "hot_water_tank_type": {
         "address": {
             "h2k": "TankType,English",

@@ -319,31 +319,43 @@ def h2ktohpxml(h2k_string="", config={}):
     systems_results = get_systems(h2k_dict, model_data)
     hvac_dict = systems_results["hvac_dict"]
     dhw_dict = systems_results["dhw_dict"]
+    mech_vent_dict = systems_results["mech_vent_dict"]
 
     # only update the heating system from the template if we've translated the h2k into a valid object
-    if model_data.get_is_hvac_translated():
-        hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"][
-            "HVAC"
-        ] = hvac_dict
-    else:
-        # Add warning/error
-        model_data.add_warning_message(
-            {
-                "message": "The h2k file contains an HVAC system that is not supported by the translation process. The default HVAC section from the template was used in the output HPXML file."
-            }
-        )
+    # if model_data.get_is_hvac_translated():
+    #     hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"][
+    #         "HVAC"
+    #     ] = hvac_dict
+    # else:
+    #     # Add warning/error
+    #     model_data.add_warning_message(
+    #         {
+    #             "message": "The h2k file contains an HVAC system that is not supported by the translation process. The default HVAC section from the template was used in the output HPXML file."
+    #         }
+    #     )
 
-    if model_data.get_is_dhw_translated():
-        hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"][
-            "WaterHeating"
-        ] = dhw_dict
-    else:
-        # Add warning/error
-        model_data.add_warning_message(
-            {
-                "message": "The h2k file contains a DHW system that is not supported by the translation process. The default DHW section from the template was used in the output HPXML file."
-            }
-        )
+    # if mech_vent_dict != {}:
+    #     hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"][
+    #         "MechanicalVentilation"
+    #     ] = mech_vent_dict
+
+    # if model_data.get_is_dhw_translated():
+    #     hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"][
+    #         "WaterHeating"
+    #     ] = dhw_dict
+    # else:
+    #     # Add warning/error
+    #     model_data.add_warning_message(
+    #         {
+    #             "message": "The h2k file contains a DHW system that is not supported by the translation process. The default DHW section from the template was used in the output HPXML file."
+    #         }
+    #     )
+
+    hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"] = {
+        **({"HVAC": hvac_dict} if model_data.get_is_hvac_translated() else {}),
+        **({"MechanicalVentilation": mech_vent_dict} if mech_vent_dict != {} else {}),
+        **({"WaterHeating": dhw_dict} if model_data.get_is_dhw_translated() else {}),
+    }
 
     # ================ 9. HPXML Section: Appliances ================
     hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Appliances"] = get_appliances(

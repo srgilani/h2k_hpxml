@@ -6,10 +6,10 @@ from ..utils import obj, h2k
 fireplace_stove_equip_map = {
     "advanced airtight wood stove": "stove",
     "1st option with catalytic converter": "stove",
-    "conventional furnace": None,
+    "conventional furnace": "furnace",
     "conventional stove": "stove",
     "pellet stove": "stove",
-    "masonry heater": None,
+    "masonry heater": "fireplace",
     "conventional fireplace": "fireplace",
     "fireplace insert": "fireplace",
 }
@@ -37,11 +37,8 @@ def get_primary_heating_system(h2k_dict, model_data):
         # TODO: Remove is_hvac_translated flag after testing
         model_data.set_is_hvac_translated(True)
 
-        furnace_subtype = (
-            str(obj.get_val(type1_data, "Equipment,EquipmentType,English"))
-        ).lower()
-
-        hpxml_heating_type = fireplace_stove_equip_map.get(furnace_subtype, None)
+        # A slightly unique selection field, used to determine whether to build a furnace (default), stove, or fireplace
+        hpxml_heating_type = h2k.get_selection_field(type1_data, "furnace_equip_type")
 
         if hpxml_heating_type == "stove":
             # ignores differences between furnaces and boilers because HPXML has an explicit stove component
@@ -50,6 +47,7 @@ def get_primary_heating_system(h2k_dict, model_data):
             # ignores differences between furnaces and boilers because HPXML has an explicit fireplace component
             primary_heating_dict = get_fireplace(type1_data, model_data)
         else:
+            # Default, builds furnace
             primary_heating_dict = get_furnace(type1_data, model_data)
 
     elif type1_type == "Boiler":
@@ -67,6 +65,19 @@ def get_electric_resistance(type1_data, model_data):
 
     baseboard_capacity = h2k.get_number_field(type1_data, "baseboard_capacity")
     baseboard_efficiency = h2k.get_number_field(type1_data, "baseboard_efficiency")
+
+    model_data.set_building_details(
+        {
+            "heat_pump_backup_type": "separate",
+            "heat_pump_backup_system": "baseboards",
+            "heat_pump_backup_fuel": "electricity",
+            "heat_pump_backup_efficiency": baseboard_efficiency,
+            "heat_pump_backup_eff_unit": "Percent",
+            "heat_pump_backup_autosized": False,
+            "heat_pump_backup_capacity": baseboard_capacity,
+            "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+        }
+    )
 
     # By default we assume electric resistance, overwriting with radiant if present
     # “baseboard”, “radiant floor”, or “radiant ceiling”
@@ -110,6 +121,19 @@ def get_furnace(type1_data, model_data):
     furnace_pilot_light = h2k.get_number_field(type1_data, "furnace_pilot_light")
 
     furnace_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
+
+    model_data.set_building_details(
+        {
+            "heat_pump_backup_type": "integrated",
+            "heat_pump_backup_system": "furnace",
+            "heat_pump_backup_fuel": furnace_fuel_type,
+            "heat_pump_backup_efficiency": furnace_efficiency,
+            "heat_pump_backup_eff_unit": "Percent" if is_steady_state else "AFUE",
+            "heat_pump_backup_autosized": is_auto_sized,
+            "heat_pump_backup_capacity": furnace_capacity,
+            "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+        }
+    )
 
     # TODO: confirm desired behaviour around auto-sizing
     furnace_dict = {
@@ -173,6 +197,19 @@ def get_boiler(type1_data, model_data):
     boiler_pilot_light = h2k.get_number_field(type1_data, "furnace_pilot_light")
 
     boiler_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
+
+    model_data.set_building_details(
+        {
+            "heat_pump_backup_type": "separate",
+            "heat_pump_backup_system": "boiler",
+            "heat_pump_backup_fuel": boiler_fuel_type,
+            "heat_pump_backup_efficiency": boiler_efficiency,
+            "heat_pump_backup_eff_unit": "Percent" if is_steady_state else "AFUE",
+            "heat_pump_backup_autosized": is_auto_sized,
+            "heat_pump_backup_capacity": boiler_capacity,
+            "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+        }
+    )
 
     # TODO: confirm desired behaviour around auto-sizing
     boiler_dict = {
