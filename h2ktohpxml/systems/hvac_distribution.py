@@ -13,7 +13,7 @@ def get_hvac_distribution(h2k_dict, model_data):
     heating_dist_type = model_data.get_heating_distribution_type()
     ac_hp_dist_type = model_data.get_ac_hp_distribution_type()
     primary_heating_id = model_data.get_system_id("primary_heating")
-    air_conditioner_id = model_data.get_system_id("air_conditioner")
+    air_conditioning_id = model_data.get_system_id("air_conditioning")
     air_heat_pump_id = model_data.get_system_id("air_heat_pump")
     ground_heat_pump_id = model_data.get_system_id("ground_heat_pump")
     water_heat_pump_id = model_data.get_system_id("water_heat_pump")

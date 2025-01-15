@@ -15,6 +15,7 @@ def get_hot_water_systems(h2k_dict, model_data):
     )
 
     hpxml_dhw = []
+    hpxml_solar_dhw = {}
 
     # TODO: handle case where dhw is empty
     components = obj.get_val(h2k_dict, "HouseFile,House,Components")
@@ -29,19 +30,35 @@ def get_hot_water_systems(h2k_dict, model_data):
     primary_dhw_dict = hot_water_dict.get("Primary", {})
     secondary_dhw_dict = hot_water_dict.get("Secondary", {})
 
-    primary_dhw = get_single_dhw_system(
-        primary_dhw_dict, model_data.get_system_id("primary_dhw"), model_data
-    )
-    hpxml_dhw = [primary_dhw]
+    # Note that we have a special case: Solar primary hot water with a back-up
 
-    secondary_dhw = get_single_dhw_system(
-        secondary_dhw_dict, model_data.get_system_id("secondary_dhw"), model_data
-    )
+    primary_dhw_type = obj.get_val(primary_dhw_dict, "EnergySource,English")
+    print("primary_dhw_type", primary_dhw_type)
 
-    if secondary_dhw != {}:
-        hpxml_dhw = [*hpxml_dhw, secondary_dhw]
+    if primary_dhw_type == "Solar":
+        primary_dhw = get_single_dhw_system(
+            secondary_dhw_dict, model_data.get_system_id("primary_dhw"), model_data
+        )
+        hpxml_dhw = [primary_dhw]
 
-    return hpxml_dhw
+        hpxml_solar_dhw = get_solar_dhw_system(
+            primary_dhw_dict, model_data.get_system_id("primary_dhw"), model_data
+        )
+
+    else:
+        primary_dhw = get_single_dhw_system(
+            primary_dhw_dict, model_data.get_system_id("primary_dhw"), model_data
+        )
+        hpxml_dhw = [primary_dhw]
+
+        secondary_dhw = get_single_dhw_system(
+            secondary_dhw_dict, model_data.get_system_id("secondary_dhw"), model_data
+        )
+
+        if secondary_dhw != {}:
+            hpxml_dhw = [*hpxml_dhw, secondary_dhw]
+
+    return hpxml_dhw, hpxml_solar_dhw
 
 
 def get_single_dhw_system(system_dict, sys_id, model_data):
@@ -164,3 +181,39 @@ def get_single_dhw_system(system_dict, sys_id, model_data):
         #   </WaterHeatingSystem>
 
     return hpxml_water_heating
+
+
+def get_solar_dhw_system(system_dict, sys_id, model_data):
+    if system_dict == {}:
+        return {}
+
+    # Search file results to determine solar fraction of dhw heating
+    # Models the system with a fraction of 0 if no results are in the file
+    solar_dhw_fraction = 0.01
+    results = model_data.get_results()
+
+    if results != {}:
+        solar_dhw_energy = float(obj.get_val(results, "Annual,HotWaterDemand,@primary"))
+        secondary_dhw_energy = float(
+            obj.get_val(results, "Annual,HotWaterDemand,@secondary")
+        )
+        solar_dhw_fraction = round(
+            solar_dhw_energy / (solar_dhw_energy + secondary_dhw_energy), 2
+        )
+
+    else:
+        model_data.add_warning_message(
+            {
+                "message": "A solar thermal water heating system was defined but the h2k file does not include results. This system cannot be accurately modelled in the resulting HPXML file, and has been given a placeholder solar fraction of 0.01."
+            }
+        )
+    print("solar_dhw_fraction", solar_dhw_fraction)
+
+    hpxml_solar_thermal = {
+        "SystemIdentifier": {"@id": model_data.get_system_id("solar_dhw")},
+        "SystemType": "hot water",
+        "ConnectedTo": {"@idref": sys_id},
+        "SolarFraction": solar_dhw_fraction,
+    }
+
+    return hpxml_solar_thermal

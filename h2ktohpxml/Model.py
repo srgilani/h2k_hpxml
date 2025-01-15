@@ -28,6 +28,13 @@ class ModelData:
         self.ac_hp_distribution_type = None
         self.system_ids = {"primary_heating": "HeatingSystem1"}
 
+        # Results
+        self.results = {
+            "General": {},
+            "SOC": {},
+            "Reference": {},
+        }
+
         # Tracking errors
         self.error_list = []
 
@@ -192,3 +199,47 @@ class ModelData:
             return default
         else:
             return value
+
+    def set_results(self, h2k_dict={}):
+        file_results = (
+            h2k_dict.get("HouseFile", {}).get("AllResults", {}).get("Results", [])
+        )
+
+        if isinstance(file_results, list):
+            for res in file_results:
+                house_code = res.get("@houseCode", "")
+                upgrade_case = "@type" in res.keys()
+
+                if (
+                    house_code == "UserHouse" or "@houseCode" not in res.keys()
+                ) and not (upgrade_case):
+                    self.results = {
+                        **self.results,
+                        "General": res,
+                    }
+
+                elif house_code == "SOC" and not (upgrade_case):
+                    self.results = {
+                        **self.results,
+                        "SOC": res,
+                    }
+
+                elif house_code == "Reference" and not (upgrade_case):
+                    self.results = {
+                        **self.results,
+                        "Reference": res,
+                    }
+
+        return
+
+    def get_results(self, res_type=""):
+        results = {}
+        if res_type == "":
+            # when results type isn't specified, we assume we're looking for the base results
+            # Attempt to return SOC results, and if they're not present return general mode.
+            results = self.results.get("SOC", self.results.get("General", {}))
+
+        else:
+            results = self.results.get(res_type, {})
+
+        return results

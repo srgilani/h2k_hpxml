@@ -47,6 +47,10 @@ def h2ktohpxml(h2k_string="", config={}):
 
     model_data = Model.ModelData()
 
+    model_data.set_results(h2k_dict)
+
+    results = model_data.get_results("")
+
     # ================ 2. HPXML Section: Software Info ================
 
     # ================ 3. HPXML Section: Building ================
@@ -320,6 +324,7 @@ def h2ktohpxml(h2k_string="", config={}):
     hvac_dict = systems_results["hvac_dict"]
     dhw_dict = systems_results["dhw_dict"]
     mech_vent_dict = systems_results["mech_vent_dict"]
+    solar_dhw_dict = systems_results["solar_dhw_dict"]
 
     # only update the heating system from the template if we've translated the h2k into a valid object
     # if model_data.get_is_hvac_translated():
@@ -355,6 +360,7 @@ def h2ktohpxml(h2k_string="", config={}):
         **({"HVAC": hvac_dict} if model_data.get_is_hvac_translated() else {}),
         **({"MechanicalVentilation": mech_vent_dict} if mech_vent_dict != {} else {}),
         **({"WaterHeating": dhw_dict} if model_data.get_is_dhw_translated() else {}),
+        **({"SolarThermal": solar_dhw_dict} if solar_dhw_dict != {} else {}),
     }
 
     # ================ 9. HPXML Section: Appliances ================
