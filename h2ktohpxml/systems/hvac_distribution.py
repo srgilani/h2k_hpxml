@@ -86,7 +86,6 @@ def get_hvac_distribution(h2k_dict, model_data):
             # However, h2k does not include sufficient information to determine which is used, so we default to "radiator" (without radiant floor explicitly defined)
 
             [base_type, sub_type] = hvac_dist_type.split("_")
-            # TODO: the sub_type needs to consider whether there's a heat pump as the connected system (e.g. GSHP doesn't work with "radiator")
 
             # Currently only handling regular velocity with default duct inputs
             hvac_dist_dict = {

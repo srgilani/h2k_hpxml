@@ -3,8 +3,7 @@ import math
 from ..utils import obj, h2k
 
 
-# Translates heat pump data from the "Type2" heating system section of h2k
-# TODO: all backup types are defined as "integrated", need to add support for "separate"
+# Translates air conditioning data from the "Type2" heating system section of h2k
 def get_air_conditioning(h2k_dict, model_data):
 
     type2_heating_system = obj.get_val(h2k_dict, "HouseFile,House,HeatingCooling,Type2")
@@ -16,7 +15,6 @@ def get_air_conditioning(h2k_dict, model_data):
 
     type2_type = "None" if len(type2_type) == 0 else type2_type[0]
 
-    # print("type2_type", type2_type)
     type2_data = type2_heating_system.get(type2_type, {})
 
     # Get common specs
@@ -50,8 +48,6 @@ def get_air_conditioning(h2k_dict, model_data):
 
     ac_dict = {}
     if type2_type == "AirConditioning":
-        # print("AC DETECTED")
-
         ac_dict = {
             "SystemIdentifier": {"@id": model_data.get_system_id("air_conditioning")},
             "DistributionSystem": {

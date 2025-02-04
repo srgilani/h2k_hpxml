@@ -17,7 +17,7 @@ def get_hot_water_systems(h2k_dict, model_data):
     hpxml_dhw = []
     hpxml_solar_dhw = {}
 
-    # TODO: handle case where dhw is empty
+    # TODO: Error handling when DHW is empty
     components = obj.get_val(h2k_dict, "HouseFile,House,Components")
 
     if "HotWater" not in components.keys():
@@ -33,7 +33,6 @@ def get_hot_water_systems(h2k_dict, model_data):
     # Note that we have a special case: Solar primary hot water with a back-up
 
     primary_dhw_type = obj.get_val(primary_dhw_dict, "EnergySource,English")
-    print("primary_dhw_type", primary_dhw_type)
 
     if primary_dhw_type == "Solar":
         primary_dhw = get_single_dhw_system(
@@ -72,7 +71,8 @@ def get_single_dhw_system(system_dict, sys_id, model_data):
     tank_volume = h2k.get_number_field(system_dict, "hot_water_tank_volume")
     load_fraction = h2k.get_number_field(system_dict, "hot_water_load_fraction")
 
-    # TODO: logic to make sure fraction is split properly between tanks
+    # Handles case when there's only one system so the field is empty
+    # H2k doesn't allow you to have either fraction of tank = 0 when 2 DHW systems are defined
     if load_fraction == 0:
         load_fraction = 1
 
@@ -85,8 +85,6 @@ def get_single_dhw_system(system_dict, sys_id, model_data):
     if tank_location == "CRAWLSPACE":
         crawlspace_location = model_data.get_building_detail("crawlspace_location")
         tank_location = crawlspace_location
-
-    # TODO: solar hot water not handled
 
     is_uef = obj.get_val(system_dict, "EnergyFactor,@isUniform")
     uef_draw_pattern = h2k.get_selection_field(
@@ -216,7 +214,6 @@ def get_solar_dhw_system(system_dict, sys_id, model_data):
                 "message": "A solar thermal water heating system was defined but the h2k file does not include results. This system cannot be accurately modelled in the resulting HPXML file, and has been given a placeholder solar fraction of 0.01."
             }
         )
-    print("solar_dhw_fraction", solar_dhw_fraction)
 
     hpxml_solar_thermal = {
         "SystemIdentifier": {"@id": model_data.get_system_id("solar_dhw")},

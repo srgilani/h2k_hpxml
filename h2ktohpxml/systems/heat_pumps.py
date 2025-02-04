@@ -4,7 +4,9 @@ from ..utils import obj, h2k
 
 
 # Translates heat pump data from the "Type2" heating system section of h2k
-# TODO: all backup types are defined as "integrated", need to add support for "separate"
+# Heat pump back-up types defined based on primary heating system type as follows:
+#   "integrated": furnace
+#   "separate": baseboards, boiler, fireplace, stove
 def get_heat_pump(h2k_dict, model_data):
 
     type2_heating_system = obj.get_val(h2k_dict, "HouseFile,House,HeatingCooling,Type2")
@@ -16,7 +18,6 @@ def get_heat_pump(h2k_dict, model_data):
 
     type2_type = "None" if len(type2_type) == 0 else type2_type[0]
 
-    # print("type2_type", type2_type)
     type2_data = type2_heating_system.get(type2_type, {})
 
     # Get common specs
@@ -97,6 +98,11 @@ def get_heat_pump(h2k_dict, model_data):
         # Use default behaviour depending on different heat pump types (until comparison testing between the two engines)
         pass
 
+    # determine if in heating or heating+cooling configuration
+    heating_and_cooling = (
+        obj.get_val(type2_data, "Equipment,Function,English") == "Heating/Cooling"
+    )
+
     heat_pump_dict = {}
     if type2_type == "AirHeatPump":
         # Default backup logic for central ASHP
@@ -112,13 +118,10 @@ def get_heat_pump(h2k_dict, model_data):
         # If neither CompressorLockoutTemperature nor BackupHeatingSwitchoverTemperature provided,
         # CompressorLockoutTemperature defaults to 25F if fossil fuel backup otherwise 0F.
 
-        print("ASHP DETECTED")
-
         air_heat_pump_equip_type = h2k.get_selection_field(
             type2_data, "air_heat_pump_equip_type"
         )
 
-        print(air_heat_pump_equip_type)
         if air_heat_pump_equip_type == "mini-split":
             # Defaults for determining low-temp heat pump capacity:
             # If neither extension/HeatingCapacityRetention nor HeatingCapacity17F nor HeatingDetailedPerformanceData provided, heating capacity retention defaults to 0.0461 * HSPF + 0.1594 (at 5F).
@@ -281,7 +284,9 @@ def get_heat_pump(h2k_dict, model_data):
                 **({} if is_auto_sized else {"CoolingCapacity": hp_capacity}),
                 # "CompressorType": "single stage", #Using HPXML's built-in defaulting at the moment
                 # defaults to “single stage” if SEER <= 15, else “two stage” if SEER <= 21, else “variable speed”.
-                "CoolingSensibleHeatFraction": cooling_sensible_heat_fraction,
+                "CoolingSensibleHeatFraction": (
+                    cooling_sensible_heat_fraction if heating_and_cooling else 0.76
+                ),
                 **(
                     {
                         "BackupType": "separate",
@@ -318,10 +323,11 @@ def get_heat_pump(h2k_dict, model_data):
                     else {}
                 ),
                 "FractionHeatLoadServed": 1,
-                "FractionCoolLoadServed": 1,
+                "FractionCoolLoadServed": 1 if heating_and_cooling else 0,
+                # SEER = 10 is a placeholder to prevent hpxml from crashing, but it's only used when the HP is in heating-only mode
                 "AnnualCoolingEfficiency": {
                     "Units": "SEER",  # only option
-                    "Value": round(hp_cooling_seer, 2),
+                    "Value": round(hp_cooling_seer, 2) if heating_and_cooling else 10,
                 },
                 "AnnualHeatingEfficiency": {
                     "Units": "HSPF",  # only option
@@ -421,8 +427,6 @@ def get_heat_pump(h2k_dict, model_data):
         model_data.set_ac_hp_distribution_type("air_regular velocity")
 
     elif type2_type == "GroundHeatPump":
-        print("GSHP DETECTED")
-        # print(type2_data)
 
         # A separate backup is used if the primary heating system type is a baseboard, boiler, stove, or fireplace, integrated if furnace.
         heat_pump_dict = {
@@ -495,6 +499,6 @@ def get_heat_pump(h2k_dict, model_data):
 
         model_data.set_ac_hp_distribution_type("air_regular velocity")
 
-    # print("NO HEAT PUMP")
+
 
     return heat_pump_dict

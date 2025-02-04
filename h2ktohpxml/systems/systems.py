@@ -74,6 +74,13 @@ def get_systems(h2k_dict, model_data):
     elif air_conditioning_result != {}:
         primary_cooling_id = model_data.get_system_id("air_conditioning")
 
+    # Rules for building the object below:
+    # Only include a cooling system if an AC or Heat pump is present
+    #   Note that it's impossible for both a heat pump and AC to be present because they're both type2 h2k systems
+    # Only include a heating system if there is NOT a heat pump with an integrated back-up
+    # Only include a HVAC distribution system if one has been built,
+    #   Where the decision to build one is based on the heating/cooling system types present (based on heating_dist_type & ac_hp_dist_type)
+    # TODO: FractionHeatingLoad must sum across all systems when dealing with multiple systems
     hvac_dict = {
         "HVACPlant": {
             "PrimarySystems": {
@@ -104,12 +111,24 @@ def get_systems(h2k_dict, model_data):
         ),
     }
 
+    # Remove the "FractionHeatLoadServed" from the heating system if HeatPump[BackupType="separate"]
+    # We don't really know we have to do this until everything is built
+    if heat_pump_backup_type == "separate":
+        hvac_dict["HVACPlant"]["HeatingSystem"].pop("FractionHeatLoadServed", None)
+
     hot_water_system_result, solar_dhw_system_result = get_hot_water_systems(
         h2k_dict, model_data
     )
 
     hot_water_distribution_result = get_hot_water_distribution(h2k_dict, model_data)
     water_fixtures_result = get_water_fixtures(h2k_dict, model_data)
+
+    if hot_water_system_result[0] == {}:
+        model_data.add_warning_message(
+            {
+                "message": "The h2k model does not have a DHW system defined, the HPXML simulation will not proceed."
+            }
+        )
 
     dhw_dict = {
         "WaterHeatingSystem": hot_water_system_result,

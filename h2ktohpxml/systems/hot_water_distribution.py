@@ -8,7 +8,7 @@ def get_hot_water_distribution(h2k_dict, model_data):
 
     dwhr_system_primary = model_data.get_building_detail("dwhr_system_primary")
 
-    if dwhr_system_primary != {}:
+    if dwhr_system_primary != {} and dwhr_system_primary != None:
         # Description of "EqualFlow":
         # EqualFlow should be true if the DWHR supplies pre-heated water to both the fixture cold water piping and the hot water heater potable supply piping.
         # I believe this meaning aligns with the system configuration specification in h2k

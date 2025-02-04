@@ -359,7 +359,7 @@ def h2ktohpxml(h2k_string="", config={}):
     hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"] = {
         **({"HVAC": hvac_dict} if model_data.get_is_hvac_translated() else {}),
         **({"MechanicalVentilation": mech_vent_dict} if mech_vent_dict != {} else {}),
-        **({"WaterHeating": dhw_dict} if model_data.get_is_dhw_translated() else {}),
+        **({"WaterHeating": dhw_dict} if dhw_dict != {} else {}),
         **({"SolarThermal": solar_dhw_dict} if solar_dhw_dict != {} else {}),
     }
 

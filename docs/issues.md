@@ -24,3 +24,7 @@ However, the workflow does require a floor above a crawlspace.
 HPXML has an input for the heat pump capacity at 17F (-8.33C), but h2k files don't contain this information. The default HPXML derate is used at this time:
 - single/two stage: 0.425 (at 5F)
 - variable speed: 0.0461 * HSPF + 0.1594 (at 5F)
+
+
+#### DHW System Requirement
+HPXML requires that a DHW system be present, you can have a valid h2k simulation (general mode only) without one. At the moment, files without DHW systems will not be able to produce results in HPXML

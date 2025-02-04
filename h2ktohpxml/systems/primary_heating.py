@@ -108,9 +108,6 @@ def get_electric_resistance(type1_data, model_data):
         ),
     }
 
-    # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
-    # Also must sum to 1 across all heating systems
-
     return elec_resistance
 
 
@@ -173,9 +170,6 @@ def get_furnace(type1_data, model_data):
         ),
     }
 
-    # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
-    # Also must sum to 1 across all heating systems
-
     # Add pilot light if present
     if furnace_pilot_light > 0:
         furnace_dict["HeatingSystemType"] = {
@@ -188,7 +182,7 @@ def get_furnace(type1_data, model_data):
     # No h2k representation for "gravity" distribution type
     # Might need to update this based on logic around system types
     model_data.set_heating_distribution_type("air_regular velocity")
-    print("returning furnace")
+
     return furnace_dict
 
 
@@ -251,9 +245,6 @@ def get_boiler(type1_data, model_data):
             else {}
         ),
     }
-
-    # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
-    # Also must sum to 1 across all heating systems
 
     # Add pilot light if present
     if boiler_pilot_light > 0:
@@ -323,9 +314,6 @@ def get_fireplace(type1_data, model_data):
         ),
     }
 
-    # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
-    # Also must sum to 1 across all heating systems
-
     return fireplace_dict
 
 
@@ -375,8 +363,5 @@ def get_stove(type1_data, model_data):
             else {}
         ),
     }
-
-    # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
-    # Also must sum to 1 across all heating systems
 
     return stove_dict
