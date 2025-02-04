@@ -180,6 +180,15 @@ def get_single_dhw_system(system_dict, sys_id, model_data):
         #     <HotWaterTemperature>125.0</HotWaterTemperature>
         #   </WaterHeatingSystem>
 
+    # Save DWHR for later (hot_water_distribution.py), only for primary system, HPXML can't handle 2 DWHR systems
+    if "1" in sys_id:
+        # Looking for the "1" in the DHW system id to know we're dealing with the primary system
+        model_data.set_building_details(
+            {
+                "dwhr_system_primary": system_dict.get("DrainWaterHeatRecovery", {}),
+            }
+        )
+
     return hpxml_water_heating
 
 

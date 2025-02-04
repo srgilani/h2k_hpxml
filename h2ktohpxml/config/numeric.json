@@ -809,5 +809,17 @@
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,CoolingSensibleHeatFraction"
         }
         
+    },
+    "dwhr_efficiency": {
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "%",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "@effectivenessAt9.5",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,HotWaterDistribution,DrainWaterHeatRecovery,Efficiency"
+        }
     }
 }
