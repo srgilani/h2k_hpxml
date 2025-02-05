@@ -539,6 +539,35 @@
             "mini-split"
         ],
         "default": "air-to-air"
+    },
+    "p9_fuel_type": {
+        "address": {
+            "h2k": "P9,TestData,EnergySource,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingSystemFuel"
+        },
+        "map": {
+            "Natural gas": "natural gas",
+            "Oil": "fuel oil",
+            "Propane": "propane"
+        },
+        "hpxml_opts": [
+            "electricity", 
+            "natural gas", 
+            "fuel oil", 
+            "fuel oil 1", 
+            "fuel oil 2", 
+            "fuel oil 4", 
+            "fuel oil 5/6", 
+            "diesel", 
+            "propane", 
+            "kerosene", 
+            "coal", 
+            "coke", 
+            "bituminous coal", 
+            "wood", 
+            "wood pellets"
+        ],
+        "default": "natural gas"
     }
 }
 

@@ -60,6 +60,16 @@ def get_primary_heating_system(h2k_dict, model_data):
             {"combi_related_hvac_id": model_data.get_system_id("primary_heating")}
         )
 
+    elif type1_type == "P9":
+        # TODO: Remove is_hvac_translated flag after testing
+        model_data.set_is_hvac_translated(True)
+        # Need a custom function here because the structure of the P9 object is very different
+        primary_heating_dict = get_p9_heating_system(type1_data, model_data)
+
+        model_data.set_system_id(
+            {"combi_related_hvac_id": model_data.get_system_id("primary_heating")}
+        )
+
     return primary_heating_dict
 
 
@@ -388,3 +398,81 @@ def get_stove(type1_data, model_data):
     }
 
     return stove_dict
+
+
+def get_p9_heating_system(type1_data, model_data):
+
+    # Capacity never calculated for P9
+    p9_capacity = h2k.get_number_field(type1_data, "p9_heating_capacity")
+
+    # Because the hot water section for HPXML combos doesn't accept an efficiency, assuming we have to use the TPF here to capture the overall performance
+    # Pulling in the composite heating efficiency in case we need to swap it in
+    p9_tpf = h2k.get_number_field(type1_data, "p9_tpf")
+    # p9_composite_heating_eff = h2k.get_number_field(type1_data, "p9_composite_heating_eff")
+
+    p9_fuel_type = h2k.get_selection_field(type1_data, "p9_fuel_type")
+
+    model_data.set_building_details(
+        {
+            "heat_pump_backup_type": "separate",
+            "heat_pump_backup_system": "boiler",
+            "heat_pump_backup_fuel": p9_fuel_type,
+            "heat_pump_backup_efficiency": p9_tpf,
+            "heat_pump_backup_eff_unit": "AFUE",
+            "heat_pump_backup_autosized": False,
+            "heat_pump_backup_capacity": p9_capacity,
+            "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+        }
+    )
+
+    # Determine the ElectricAuxiliaryEnergy [kWh/y] from the results of the h2k file
+    results = model_data.get_results()
+    electric_aux_energy = 0
+    if results != {}:
+        tot_elec_heating_GJ = float(
+            obj.get_val(results, "Annual,Consumption,Electrical,@spaceHeating")
+        )
+
+        primary_elec_heating_GJ = (
+            float(obj.get_val(results, "Annual,Consumption,SpaceHeating,@primary"))
+            if p9_fuel_type == "electricity"
+            else 0
+        )
+
+        electric_aux_energy = max(0, tot_elec_heating_GJ - primary_elec_heating_GJ) * (
+            1 / 0.0036
+        )
+
+    # TODO: confirm desired behaviour around auto-sizing
+    p9_dict = {
+        "SystemIdentifier": {"@id": model_data.get_system_id("primary_heating")},
+        "DistributionSystem": {
+            "@idref": model_data.get_system_id(
+                "hvac_hydronic_distribution"
+            )  # Boilers must have a hydronic system
+        },
+        "HeatingSystemType": {"Boiler": None},
+        "HeatingSystemFuel": p9_fuel_type,
+        "HeatingCapacity": p9_capacity,
+        "AnnualHeatingEfficiency": {
+            "Units": (
+                "AFUE"  # "Percent" if is_steady_state == "true" else "AFUE"
+            ),  # "AFUE" / "Percent"
+            "Value": p9_tpf,
+        },
+        "FractionHeatLoadServed": 1,
+        "ElectricAuxiliaryEnergy": round(
+            electric_aux_energy, 1
+        ),  # Without this, HPXML assumes 330 kWh/y for oil and 170 kWh/y for gas boilers
+    }
+
+    # No pilot light info for P9s
+
+    # No h2k representation for "gravity" distribution type
+    # Might need to update this based on logic around system types
+    # TODO: change distribution type to "radiant floor" if in-floor is defined
+    # Option to use air_fan coil if boiler has a shared water loop with a heat pump
+    model_data.set_heating_distribution_type("hydronic_radiator")
+    # model_data.set_heating_distribution_type("air_regular velocity")
+
+    return p9_dict
