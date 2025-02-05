@@ -17,6 +17,8 @@ def get_primary_heating_system(h2k_dict, model_data):
     type1_data = type1_heating_system.get(type1_type, {})
 
     primary_heating_dict = {}
+
+    print(type1_type)
     if type1_type == "Baseboards":
         # TODO: Remove is_hvac_translated flag after testing
         model_data.set_is_hvac_translated(True)
@@ -45,6 +47,18 @@ def get_primary_heating_system(h2k_dict, model_data):
 
         # Wood boilers not broken down into stoves and fireplaces, only indoor/outdoor
         primary_heating_dict = get_boiler(type1_data, model_data)
+
+    elif type1_type == "ComboHeatDhw":
+        # TODO: Remove is_hvac_translated flag after testing
+        model_data.set_is_hvac_translated(True)
+        # A normal boiler is defined, we always use hydronic_radiator distribution in the get_boiler function
+        primary_heating_dict = get_boiler(type1_data, model_data)
+
+        # Note that with this type of combo system, we still have a HotWater object with all the info we need
+        # However, we need to explicitly tell the system that it's a combo so it builds the HPXML combi directly
+        model_data.set_system_id(
+            {"combi_related_hvac_id": model_data.get_system_id("primary_heating")}
+        )
 
     return primary_heating_dict
 

@@ -64,6 +64,10 @@ def get_single_dhw_system(system_dict, sys_id, model_data):
     if system_dict == {}:
         return {}
 
+    # H2k does not allow a secondary DHW system when a combo is defined
+    combi_related_hvac_id = model_data.get_system_id("combi_related_hvac_id")
+    print(combi_related_hvac_id)
+
     tank_type = h2k.get_selection_field(system_dict, "hot_water_tank_type")
     fuel_type = h2k.get_selection_field(system_dict, "hot_water_fuel_type")
     tank_location = h2k.get_selection_field(system_dict, "hot_water_tank_location")
@@ -104,7 +108,24 @@ def get_single_dhw_system(system_dict, sys_id, model_data):
 
     hpxml_water_heating = {}
 
-    if tank_type == "storage water heater":
+    if combi_related_hvac_id != None:
+        # H2k does not allow a secondary DHW system when a combo is defined
+        model_data.set_is_dhw_translated(True)
+        hpxml_water_heating = {
+            "SystemIdentifier": {"@id": sys_id},
+            "WaterHeaterType": (
+                "space-heating boiler with tankless coil"
+                if tank_volume == 0
+                else "space-heating boiler with storage tank"
+            ),
+            "Location": tank_location,
+            **({"TankVolume": tank_volume} if tank_volume != 0 else {}),
+            "FractionDHWLoadServed": load_fraction,
+            "HotWaterTemperature": hot_water_temperature,
+            "RelatedHVACSystem": {"@idref": combi_related_hvac_id},
+        }
+
+    elif tank_type == "storage water heater":
         model_data.set_is_dhw_translated(True)
         hpxml_water_heating = {
             "SystemIdentifier": {"@id": sys_id},
