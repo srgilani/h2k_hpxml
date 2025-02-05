@@ -2,17 +2,6 @@ import math
 
 from ..utils import obj, h2k
 
-# Handled here, not in selection.json, because the format is slightly different
-fireplace_stove_equip_map = {
-    "advanced airtight wood stove": "stove",
-    "1st option with catalytic converter": "stove",
-    "conventional furnace": "furnace",
-    "conventional stove": "stove",
-    "pellet stove": "stove",
-    "masonry heater": "fireplace",
-    "conventional fireplace": "fireplace",
-    "fireplace insert": "fireplace",
-}
 
 # TODO: Flue diameter not handled
 
@@ -220,6 +209,24 @@ def get_boiler(type1_data, model_data):
         }
     )
 
+    # Determine the ElectricAuxiliaryEnergy [kWh/y] from the results of the h2k file
+    results = model_data.get_results()
+    electric_aux_energy = 0
+    if results != {}:
+        tot_elec_heating_GJ = float(
+            obj.get_val(results, "Annual,Consumption,Electrical,@spaceHeating")
+        )
+
+        primary_elec_heating_GJ = (
+            float(obj.get_val(results, "Annual,Consumption,SpaceHeating,@primary"))
+            if boiler_fuel_type == "electricity"
+            else 0
+        )
+
+        electric_aux_energy = max(0, tot_elec_heating_GJ - primary_elec_heating_GJ) * (
+            1 / 0.0036
+        )
+
     # TODO: confirm desired behaviour around auto-sizing
     boiler_dict = {
         "SystemIdentifier": {"@id": model_data.get_system_id("primary_heating")},
@@ -238,7 +245,9 @@ def get_boiler(type1_data, model_data):
             "Value": boiler_efficiency,
         },
         "FractionHeatLoadServed": 1,
-        "ElectricAuxiliaryEnergy": 0,  # Without this, HPXML assumes 330 kWh/y for oil and 170 kWh/y for gas boilers
+        "ElectricAuxiliaryEnergy": round(
+            electric_aux_energy, 1
+        ),  # Without this, HPXML assumes 330 kWh/y for oil and 170 kWh/y for gas boilers
         **(
             {"extension": {"HeatingAutosizingFactor": boiler_sizing_factor}}
             if is_auto_sized
