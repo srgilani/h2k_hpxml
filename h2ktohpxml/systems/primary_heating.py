@@ -234,11 +234,15 @@ def get_boiler(type1_data, model_data):
     )
 
     # Determine the ElectricAuxiliaryEnergy [kWh/y] from the results of the h2k file
+    # TODO: figure out how this works for supplementary heating systems
     results = model_data.get_results()
     electric_aux_energy = 0
     if results != {}:
         tot_elec_heating_GJ = float(
             obj.get_val(results, "Annual,Consumption,Electrical,@spaceHeating")
+        )
+        heat_pump_elec_heating_GJ = float(
+            obj.get_val(results, "Annual,Consumption,Electrical,@heatPump")
         )
 
         primary_elec_heating_GJ = (
@@ -247,9 +251,20 @@ def get_boiler(type1_data, model_data):
             else 0
         )
 
-        electric_aux_energy = max(0, tot_elec_heating_GJ - primary_elec_heating_GJ) * (
-            1 / 0.0036
-        )
+        if boiler_fuel_type != "electricity" and heat_pump_elec_heating_GJ > 0:
+            # When there's a non-electric boiler and a heat pump, we can subtract the heat pump consumption from the total electric space heating consumption
+            electric_aux_energy = max(
+                0, tot_elec_heating_GJ - heat_pump_elec_heating_GJ
+            ) * (1 / 0.0036)
+        elif boiler_fuel_type == "electricity" and heat_pump_elec_heating_GJ > 0:
+            # We cannot disaggregate the results to determine this
+            electric_aux_energy = 0
+        else:
+            electric_aux_energy = max(
+                0, tot_elec_heating_GJ - primary_elec_heating_GJ
+            ) * (1 / 0.0036)
+
+        print(electric_aux_energy)
 
     # TODO: confirm desired behaviour around auto-sizing
     boiler_dict = {
