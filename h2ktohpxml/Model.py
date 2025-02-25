@@ -26,6 +26,7 @@ class ModelData:
         self.is_dhw_translated = False
         self.heating_distribution_type = None
         self.ac_hp_distribution_type = None
+        self.suppl_heating_distribution_types = []
         self.system_ids = {"primary_heating": "HeatingSystem1"}
 
         # Results
@@ -179,6 +180,12 @@ class ModelData:
 
     def get_ac_hp_distribution_type(self):
         return self.ac_hp_distribution_type
+
+    def set_suppl_heating_distribution_types(self, val):
+        self.suppl_heating_distribution_types = val
+
+    def get_suppl_heating_distribution_types(self):
+        return self.suppl_heating_distribution_types
 
     # tracking hvac system ids
 

@@ -20,6 +20,7 @@
 # For example, with electric baseboards, no HVACDistribution section should be present
 
 from .primary_heating import get_primary_heating_system
+from .secondary_heating import get_secondary_heating_systems
 from .hvac_control import get_hvac_control
 from .hvac_distribution import get_hvac_distribution
 from .heat_pumps import get_heat_pump
@@ -49,6 +50,8 @@ def get_systems(h2k_dict, model_data):
 
     # Primary heating system as a component of the HVACPlant Section
     primary_heating_result = get_primary_heating_system(h2k_dict, model_data)
+
+    secondary_heating_systems = get_secondary_heating_systems(h2k_dict, model_data)
 
     # Primary cooling system as a component of the HVACPlant Section
     air_conditioning_result = get_air_conditioning(h2k_dict, model_data)
@@ -81,6 +84,14 @@ def get_systems(h2k_dict, model_data):
     # Only include a HVAC distribution system if one has been built,
     #   Where the decision to build one is based on the heating/cooling system types present (based on heating_dist_type & ac_hp_dist_type)
     # TODO: FractionHeatingLoad must sum across all systems when dealing with multiple systems
+
+    # Remove the "FractionHeatLoadServed" from the primary heating system if HeatPump[BackupType="separate"]
+    # We don't really know we have to do this until everything is built
+    if heat_pump_backup_type == "separate":
+        primary_heating_result.pop("FractionHeatLoadServed", None)
+
+    print(secondary_heating_systems)
+
     hvac_dict = {
         "HVACPlant": {
             "PrimarySystems": {
@@ -92,9 +103,14 @@ def get_systems(h2k_dict, model_data):
                 ),
             },
             **(
-                {}
+                {"HeatingSystem": secondary_heating_systems}
                 if heat_pump_backup_type == "integrated"
-                else {"HeatingSystem": primary_heating_result}
+                else {
+                    "HeatingSystem": [
+                        primary_heating_result,
+                        *secondary_heating_systems,
+                    ]
+                }
             ),
             **({"HeatPump": heat_pump_result} if heat_pump_result != {} else {}),
             **(
@@ -110,11 +126,6 @@ def get_systems(h2k_dict, model_data):
             else {}
         ),
     }
-
-    # Remove the "FractionHeatLoadServed" from the heating system if HeatPump[BackupType="separate"]
-    # We don't really know we have to do this until everything is built
-    if heat_pump_backup_type == "separate":
-        hvac_dict["HVACPlant"]["HeatingSystem"].pop("FractionHeatLoadServed", None)
 
     hot_water_system_result, solar_dhw_system_result = get_hot_water_systems(
         h2k_dict, model_data

@@ -1,6 +1,6 @@
 import math
 
-from ..utils import obj, h2k
+from ..utils import obj, h2k, units
 
 
 # TODO: Flue diameter not handled
@@ -18,32 +18,67 @@ def get_primary_heating_system(h2k_dict, model_data):
 
     primary_heating_dict = {}
 
-    print(type1_type)
+    # defaulting this to 0
+    model_data.set_building_details({"primary_pilot_light_GJpery": 0})
+
+    print("TYPE1", type1_type)
     if type1_type == "Baseboards":
         # TODO: Remove is_hvac_translated flag after testing
         model_data.set_is_hvac_translated(True)
+        # Needed for "Same as type 1 system" option in supplementary systems
+        model_data.set_building_details(
+            {
+                "primary_heating_equip_type": "baseboard",
+            }
+        )
         primary_heating_dict = get_electric_resistance(type1_data, model_data)
 
     elif type1_type == "Furnace":
         # TODO: Remove is_hvac_translated flag after testing
         model_data.set_is_hvac_translated(True)
+        # Needed for "Same as type 1 system" option in supplementary systems
 
         # A slightly unique selection field, used to determine whether to build a furnace (default), stove, or fireplace
         hpxml_heating_type = h2k.get_selection_field(type1_data, "furnace_equip_type")
 
         if hpxml_heating_type == "stove":
             # ignores differences between furnaces and boilers because HPXML has an explicit stove component
+            # Needed for "Same as type 1 system" option in supplementary systems
+            model_data.set_building_details(
+                {
+                    "primary_heating_equip_type": "stove",
+                }
+            )
             primary_heating_dict = get_stove(type1_data, model_data)
         elif hpxml_heating_type == "fireplace":
             # ignores differences between furnaces and boilers because HPXML has an explicit fireplace component
+            # Needed for "Same as type 1 system" option in supplementary systems
+            model_data.set_building_details(
+                {
+                    "primary_heating_equip_type": "fireplace",
+                }
+            )
             primary_heating_dict = get_fireplace(type1_data, model_data)
         else:
             # Default, builds furnace
+            # Needed for "Same as type 1 system" option in supplementary systems
+            model_data.set_building_details(
+                {
+                    "primary_heating_equip_type": "furnace",
+                }
+            )
             primary_heating_dict = get_furnace(type1_data, model_data)
 
     elif type1_type == "Boiler":
         # TODO: Remove is_hvac_translated flag after testing
         model_data.set_is_hvac_translated(True)
+
+        # Needed for "Same as type 1 system" option in supplementary systems
+        model_data.set_building_details(
+            {
+                "primary_heating_equip_type": "boiler",
+            }
+        )
 
         # Wood boilers not broken down into stoves and fireplaces, only indoor/outdoor
         primary_heating_dict = get_boiler(type1_data, model_data)
@@ -51,6 +86,14 @@ def get_primary_heating_system(h2k_dict, model_data):
     elif type1_type == "ComboHeatDhw":
         # TODO: Remove is_hvac_translated flag after testing
         model_data.set_is_hvac_translated(True)
+
+        # Needed for "Same as type 1 system" option in supplementary systems
+        model_data.set_building_details(
+            {
+                "primary_heating_equip_type": "boiler",
+            }
+        )
+
         # A normal boiler is defined, we always use hydronic_radiator distribution in the get_boiler function
         primary_heating_dict = get_boiler(type1_data, model_data)
 
@@ -63,6 +106,14 @@ def get_primary_heating_system(h2k_dict, model_data):
     elif type1_type == "P9":
         # TODO: Remove is_hvac_translated flag after testing
         model_data.set_is_hvac_translated(True)
+
+        # Needed for "Same as type 1 system" option in supplementary systems
+        model_data.set_building_details(
+            {
+                "primary_heating_equip_type": "boiler",
+            }
+        )
+
         # Need a custom function here because the structure of the P9 object is very different
         primary_heating_dict = get_p9_heating_system(type1_data, model_data)
 
@@ -192,6 +243,16 @@ def get_furnace(type1_data, model_data):
             }
         }
 
+        model_data.set_building_details(
+            {
+                "primary_pilot_light_GJpery": units.convert_unit(
+                    furnace_pilot_light, "daily_energy", "BTU/h", "MJ/day"
+                )
+                * 365
+                / 1000
+            }
+        )
+
     # No h2k representation for "gravity" distribution type
     # Might need to update this based on logic around system types
     model_data.set_heating_distribution_type("air_regular velocity")
@@ -264,8 +325,6 @@ def get_boiler(type1_data, model_data):
                 0, tot_elec_heating_GJ - primary_elec_heating_GJ
             ) * (1 / 0.0036)
 
-        print(electric_aux_energy)
-
     # TODO: confirm desired behaviour around auto-sizing
     boiler_dict = {
         "SystemIdentifier": {"@id": model_data.get_system_id("primary_heating")},
@@ -302,6 +361,16 @@ def get_boiler(type1_data, model_data):
                 "extension": {"PilotLightBtuh": boiler_pilot_light},
             }
         }
+
+        model_data.set_building_details(
+            {
+                "primary_pilot_light_GJpery": units.convert_unit(
+                    boiler_pilot_light, "daily_energy", "BTU/h", "MJ/day"
+                )
+                * 365
+                / 1000
+            }
+        )
 
     # No h2k representation for "gravity" distribution type
     # Might need to update this based on logic around system types

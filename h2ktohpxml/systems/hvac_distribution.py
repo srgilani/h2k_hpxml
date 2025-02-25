@@ -12,6 +12,9 @@ def get_hvac_distribution(h2k_dict, model_data):
 
     heating_dist_type = model_data.get_heating_distribution_type()
     ac_hp_dist_type = model_data.get_ac_hp_distribution_type()
+    supplemental_heating_dist_types = (
+        model_data.get_suppl_heating_distribution_types()
+    )  # A list
     primary_heating_id = model_data.get_system_id("primary_heating")
     air_conditioning_id = model_data.get_system_id("air_conditioning")
     air_heat_pump_id = model_data.get_system_id("air_heat_pump")
@@ -28,8 +31,11 @@ def get_hvac_distribution(h2k_dict, model_data):
     # We combine them here and loop through them, removing duplicates such that if two systems call for the same
     # type of distribution they will use the same one.
     # This behaviour is supported by the pre-defined distribution system ids set up at the beginning of the get_systems() function
+    print(heating_dist_type, ac_hp_dist_type)
     for hvac_dist_type in list(
-        OrderedDict.fromkeys([heating_dist_type, ac_hp_dist_type])
+        OrderedDict.fromkeys(
+            [heating_dist_type, ac_hp_dist_type, *supplemental_heating_dist_types]
+        )
     ):
         if "air_" in str(hvac_dist_type):
             # “regular velocity”, “gravity”, or “fan coil” are the supported types

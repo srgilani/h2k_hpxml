@@ -27,6 +27,7 @@
 - Hot water heating capcity will use the "input capacity" field in the hot water section if it's present. However, this field isn't always present. It's also within a section of the hot water screen called "Standby", so it's unclear if this field has the same interpretation as HPXML
 - Using HPXML's built-in assumptions about hot water distribution pipe length
 - Unrestricted GSHP/WSHP cutoffs are enforced by applying a switchover temp of -40C
+- When a supplementary heating system's equipment type is "Other (describe)" in h2k, the "Space Heater" HPXML system is used
 
 ### Results-dependent translations
 #### Boiler Electric Auxiliary Energy

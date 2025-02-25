@@ -66,7 +66,6 @@ def get_single_dhw_system(system_dict, sys_id, model_data):
 
     # H2k does not allow a secondary DHW system when a combo is defined
     combi_related_hvac_id = model_data.get_system_id("combi_related_hvac_id")
-    print(combi_related_hvac_id)
 
     tank_type = h2k.get_selection_field(system_dict, "hot_water_tank_type")
     fuel_type = h2k.get_selection_field(system_dict, "hot_water_fuel_type")
