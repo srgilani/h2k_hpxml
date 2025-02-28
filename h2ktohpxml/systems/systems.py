@@ -26,6 +26,7 @@ from .hvac_distribution import get_hvac_distribution
 from .heat_pumps import get_heat_pump
 from .air_conditioning import get_air_conditioning
 
+from .ventilation import get_ventilation_systems
 
 from .hot_water import get_hot_water_systems
 from .hot_water_distribution import get_hot_water_distribution
@@ -77,6 +78,8 @@ def get_systems(h2k_dict, model_data):
     elif air_conditioning_result != {}:
         primary_cooling_id = model_data.get_system_id("air_conditioning")
 
+    ventilation_results = get_ventilation_systems(h2k_dict, model_data)
+
     # Rules for building the object below:
     # Only include a cooling system if an AC or Heat pump is present
     #   Note that it's impossible for both a heat pump and AC to be present because they're both type2 h2k systems
@@ -89,8 +92,6 @@ def get_systems(h2k_dict, model_data):
     # We don't really know we have to do this until everything is built
     if heat_pump_backup_type == "separate":
         primary_heating_result.pop("FractionHeatLoadServed", None)
-
-    print(secondary_heating_systems)
 
     hvac_dict = {
         "HVACPlant": {
@@ -153,19 +154,11 @@ def get_systems(h2k_dict, model_data):
         else {}
     )
 
-    mech_vent_dict = {
-        "VentilationFans": {
-            "VentilationFan": {
-                "SystemIdentifier": {"@id": "VentilationFan1"},
-                "FanType": "heat recovery ventilator",
-                "RatedFlowRate": 79.5,
-                "HoursInOperation": 24,
-                "UsedForWholeBuildingVentilation": "true",
-                "SensibleRecoveryEfficiency": 0.75,
-                "FanPower": 75.8,
-            }
-        }
-    }
+    mech_vent_dict = (
+        {"VentilationFans": {"VentilationFan": ventilation_results}}
+        if ventilation_results != []
+        else {}
+    )
 
     return {
         "hvac_dict": hvac_dict,

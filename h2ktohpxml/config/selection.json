@@ -607,6 +607,24 @@
             "radiant ceiling"
         ],
         "default": "furnace"
+    },
+    "base_ventilator_type": {
+        "address": {
+            "h2k": "VentilatorType,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,MechanicalVentilation,VentilationFans,VentilationFan,FanLocation"
+        },
+        "map": {
+            "HRV": "hrv",
+            "Range hood": "kitchen",
+            "Bathroom": "bath",
+            "Utility": "utility",
+            "Dryer": null
+        },
+        "hpxml_opts": [
+            "kitchen",
+            "bath"
+        ],
+        "default": "bath"
     }
 }
 
