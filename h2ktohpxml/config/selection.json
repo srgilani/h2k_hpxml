@@ -625,6 +625,27 @@
             "bath"
         ],
         "default": "bath"
+    },
+    "pv_module_type": {
+        "address": {
+            "h2k": "Module,Type,English",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,Photovoltaics,PVSystem,ModuleType"
+        },
+        "map": {
+            "Mono-Si": "standard",
+            "Poly-Si": "standard",
+            "a-Si": "thin film",
+            "CdTe": "thin film",
+            "ClS": "thin film",
+            "User Specified": "standard"
+
+        },
+        "hpxml_opts": [
+            "standard",
+            "premium",
+            "thin film"
+        ],
+        "default": "standard"
     }
 }
 

@@ -193,6 +193,7 @@ def get_furnace(type1_data, model_data):
     )
 
     furnace_pilot_light = h2k.get_number_field(type1_data, "furnace_pilot_light")
+    furnace_flue_diameter = h2k.get_number_field(type1_data, "furnace_flue_diameter")
 
     furnace_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
 
@@ -208,6 +209,9 @@ def get_furnace(type1_data, model_data):
             "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
         }
     )
+
+    if furnace_flue_diameter > 0:
+        model_data.set_flue_diameters(furnace_flue_diameter)
 
     # TODO: confirm desired behaviour around auto-sizing
     furnace_dict = {
@@ -278,6 +282,7 @@ def get_boiler(type1_data, model_data):
     )
 
     boiler_pilot_light = h2k.get_number_field(type1_data, "furnace_pilot_light")
+    boiler_flue_diameter = h2k.get_number_field(type1_data, "furnace_flue_diameter")
 
     boiler_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
 
@@ -293,6 +298,9 @@ def get_boiler(type1_data, model_data):
             "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
         }
     )
+
+    if boiler_flue_diameter > 0:
+        model_data.set_flue_diameters(boiler_flue_diameter)
 
     # Determine the ElectricAuxiliaryEnergy [kWh/y] from the results of the h2k file
     # TODO: figure out how this works for supplementary heating systems
@@ -391,10 +399,13 @@ def get_fireplace(type1_data, model_data):
     is_steady_state = obj.get_val(type1_data, "Specifications,@isSteadyState")
 
     fireplace_sizing_factor = h2k.get_number_field(type1_data, "furnace_sizing_factor")
+
     is_auto_sized = (
         "Calculated" == obj.get_val(type1_data, "Specifications,OutputCapacity,English")
         or fireplace_capacity == 0
     )
+
+    fireplace_flue_diameter = h2k.get_number_field(type1_data, "furnace_flue_diameter")
 
     fireplace_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
 
@@ -410,6 +421,9 @@ def get_fireplace(type1_data, model_data):
             "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
         }
     )
+
+    if fireplace_flue_diameter > 0:
+        model_data.set_flue_diameters(fireplace_flue_diameter)
 
     # TODO: confirm desired behaviour around auto-sizing
     fireplace_dict = {
@@ -448,6 +462,8 @@ def get_stove(type1_data, model_data):
         or stove_capacity == 0
     )
 
+    stove_flue_diameter = h2k.get_number_field(type1_data, "furnace_flue_diameter")
+
     stove_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
 
     model_data.set_building_details(
@@ -462,6 +478,9 @@ def get_stove(type1_data, model_data):
             "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
         }
     )
+
+    if stove_flue_diameter > 0:
+        model_data.set_flue_diameters(stove_flue_diameter)
 
     # TODO: confirm desired behaviour around auto-sizing
     stove_dict = {

@@ -21,16 +21,19 @@
 
 from .primary_heating import get_primary_heating_system
 from .secondary_heating import get_secondary_heating_systems
+from .additional_openings import get_additional_openings
 from .hvac_control import get_hvac_control
 from .hvac_distribution import get_hvac_distribution
 from .heat_pumps import get_heat_pump
 from .air_conditioning import get_air_conditioning
 
-from .ventilation import get_ventilation_systems
-
 from .hot_water import get_hot_water_systems
 from .hot_water_distribution import get_hot_water_distribution
 from .water_fixtures import get_water_fixtures
+
+from .ventilation import get_ventilation_systems
+
+from .solar_generation import get_solar_generation
 
 
 # This function compiles translations for all HVAC and DHW sections, as there are many dependencies between these sections
@@ -53,6 +56,9 @@ def get_systems(h2k_dict, model_data):
     primary_heating_result = get_primary_heating_system(h2k_dict, model_data)
 
     secondary_heating_systems = get_secondary_heating_systems(h2k_dict, model_data)
+
+    # note this doesn't build anything (no HPXML equivalent), just tracks whether there are flues/chimneys
+    additional_openings_result = get_additional_openings(h2k_dict, model_data)
 
     # Primary cooling system as a component of the HVACPlant Section
     air_conditioning_result = get_air_conditioning(h2k_dict, model_data)
@@ -77,8 +83,6 @@ def get_systems(h2k_dict, model_data):
 
     elif air_conditioning_result != {}:
         primary_cooling_id = model_data.get_system_id("air_conditioning")
-
-    ventilation_results = get_ventilation_systems(h2k_dict, model_data)
 
     # Rules for building the object below:
     # Only include a cooling system if an AC or Heat pump is present
@@ -154,15 +158,22 @@ def get_systems(h2k_dict, model_data):
         else {}
     )
 
+    # Ventilation Systems
+    ventilation_results = get_ventilation_systems(h2k_dict, model_data)
+
     mech_vent_dict = (
         {"VentilationFans": {"VentilationFan": ventilation_results}}
         if ventilation_results != []
         else {}
     )
 
+    # Generation (Photovoltaic) Systems
+    generation_results = get_solar_generation(h2k_dict, model_data)
+
     return {
         "hvac_dict": hvac_dict,
         "dhw_dict": dhw_dict,
         "solar_dhw_dict": solar_dhw_dict,
         "mech_vent_dict": mech_vent_dict,
+        "generation_dict": generation_results,
     }

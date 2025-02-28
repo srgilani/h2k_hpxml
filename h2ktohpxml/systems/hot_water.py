@@ -82,7 +82,11 @@ def get_single_dhw_system(system_dict, sys_id, model_data):
     heating_capacity = h2k.get_number_field(system_dict, "hot_water_heating_capacity")
     energy_factor = h2k.get_number_field(system_dict, "hot_water_energy_factor")
     heat_pump_cop = h2k.get_number_field(system_dict, "hot_water_heat_pump_cop")
+    flue_diameter = h2k.get_number_field(system_dict, "hot_water_flue_diameter")
     hot_water_temperature = model_data.get_building_detail("hot_water_temperature")
+
+    if flue_diameter > 0:
+        model_data.set_flue_diameters(flue_diameter)
 
     # likely very rare, but if the tank is in a crawlspace we need to match the type used
     if tank_location == "CRAWLSPACE":

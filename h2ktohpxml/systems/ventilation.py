@@ -6,7 +6,6 @@ from ..utils import obj, h2k
 def get_ventilation_systems(h2k_dict, model_data):
     # Get overall parameters
     vent_hours_per_day = h2k.get_number_field(h2k_dict, "whole_house_vent_schedule")
-    print(vent_hours_per_day)
 
     # Get the four main ventilator objects (HRVs) & arrays (BaseVentilators)
     whole_house_ventilators = obj.get_val(
@@ -64,8 +63,6 @@ def get_ventilation_systems(h2k_dict, model_data):
     ]
 
     ventilation_fan_list = [x for x in ventilation_fan_list if x != {}]
-
-    print("ventilation_fan_list", ventilation_fan_list)
 
     return ventilation_fan_list
 

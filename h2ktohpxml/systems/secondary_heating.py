@@ -123,6 +123,9 @@ def get_secondary_heating_systems(h2k_dict, model_data):
     for system_data in suppl_heating_systems:
 
         system_type = h2k.get_selection_field(system_data, "suppl_heating_equip_type")
+        flue_diameter = h2k.get_number_field(system_data, "suppl_heating_flue_diameter")
+        if flue_diameter > 0:
+            model_data.set_flue_diameters(flue_diameter)
 
         # Determine what the primary (type1) heating system type is, if required
         type1_system_type = model_data.get_building_detail("primary_heating_equip_type")

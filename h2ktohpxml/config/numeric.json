@@ -573,6 +573,18 @@
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,Furnace,extension,PilotLightBtuh"
         }
     },
+    "furnace_flue_diameter": {
+        "units": {
+            "unit_type": "length",
+            "h2k_units": "mm",
+            "hpxml_units": "in"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,@flueDiameter",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,AirInfiltration,extension,HasFlueOrChimneyInConditionedSpace"
+        }
+    },
     "ac_sizing_factor": {
         "decimals": 2,
         "address": {
@@ -739,6 +751,19 @@
         "decimals": 2,
         "default": 0
     },
+    "hot_water_flue_diameter": {
+        "address": {
+            "h2k": "@flueDiameter",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,AirInfiltration,extension,HasFlueOrChimneyInConditionedSpace"
+        },
+        "units": {
+            "unit_type": "length",
+            "h2k_units": "mm",
+            "hpxml_units": "in"
+        },
+        "decimals": 2,
+        "default": 0
+    },
     "hot_water_temperature": {
         "address": {
             "h2k": "HouseFile,House,BaseLoads,WaterUsage,@temperature",
@@ -894,6 +919,30 @@
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,AnnualHeatingEfficiency,Value"
         }
     },
+    "suppl_heating_flue_diameter": {
+        "units": {
+            "unit_type": "length",
+            "h2k_units": "mm",
+            "hpxml_units": "in"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,Flue,@diameter",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,AirInfiltration,extension,HasFlueOrChimneyInConditionedSpace"
+        }
+    },
+    "additional_opening_flue_diameter": {
+        "units": {
+            "unit_type": "length",
+            "h2k_units": "mm",
+            "hpxml_units": "in"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "@flueDiameter",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,AirInfiltration,extension,HasFlueOrChimneyInConditionedSpace"
+        }
+    },
     "whole_house_vent_schedule": {
         "units": {
             "unit_type": "time",
@@ -915,7 +964,7 @@
         "decimals": 2,
         "address": {
             "h2k": "@exhaustFlowrate",
-            "hpxml": "HPXML,Building,BuildingDetails,MechanicalVentilation,VentilationFans,VentilationFan,RatedFlowRate"
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,MechanicalVentilation,VentilationFans,VentilationFan,RatedFlowRate"
         }
     },
     "ventilator_supply_flowrate": {
@@ -927,7 +976,7 @@
         "decimals": 2,
         "address": {
             "h2k": "@supplyFlowrate",
-            "hpxml": "HPXML,Building,BuildingDetails,MechanicalVentilation,VentilationFans,VentilationFan,RatedFlowRate"
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,MechanicalVentilation,VentilationFans,VentilationFan,RatedFlowRate"
         }
     },
     "ventilator_fan_power": {
@@ -939,7 +988,7 @@
         "decimals": 2,
         "address": {
             "h2k": "@fanPower1",
-            "hpxml": "HPXML,Building,BuildingDetails,MechanicalVentilation,VentilationFans,VentilationFan,FanPower"
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,MechanicalVentilation,VentilationFans,VentilationFan,FanPower"
         }
     },
     "hrv_efficiency": {
@@ -951,7 +1000,7 @@
         "decimals": 2,
         "address": {
             "h2k": "@efficiency1",
-            "hpxml": "HPXML,Building,BuildingDetails,MechanicalVentilation,VentilationFans,VentilationFan,SensibleRecoveryEfficiency"
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,MechanicalVentilation,VentilationFans,VentilationFan,SensibleRecoveryEfficiency"
         }
     },
     "supplemental_vent_schedule": {
@@ -964,6 +1013,90 @@
         "address": {
             "h2k": "OperationSchedule,@value",
             "hpxml": "HPXML,Building,BuildingDetails,Systems,MechanicalVentilation,VentilationFans,VentilationFan,HoursInOperation"
+        }
+    },
+    "pv_inverter_efficiency": {
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "%",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Efficiency,@inverterEfficiency",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,Photovoltaics,Inverter,InverterEfficiency"
+        }
+    },
+    "pv_module_efficiency": {
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "%",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Module,@efficiency",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,Photovoltaics,PVSystem,MaxPowerOutput"
+        }
+    },
+    "pv_array_tilt": {
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Array,@slope",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,Photovoltaics,PVSystem,ArrayAzimuth"
+        }
+    },
+    "pv_array_azimuth": {
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Array,@azimuth",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,Photovoltaics,PVSystem,ArrayAzimuth"
+        }
+    },
+    "pv_array_area": {
+        "units": {
+            "unit_type": "area",
+            "h2k_units": "m2",
+            "hpxml_units": "m2"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Array,@area",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,Photovoltaics,PVSystem,MaxPowerOutput"
+        }
+    },
+    "pv_array_misc_losses": {
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "%",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Efficiency,@miscellaneousLosses",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,Photovoltaics,PVSystem,SystemLossesFraction"
+        }
+    },
+    "pv_array_other_losses": {
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "%",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Efficiency,@otherPowerLosses",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,Photovoltaics,PVSystem,SystemLossesFraction"
         }
     }
 }
