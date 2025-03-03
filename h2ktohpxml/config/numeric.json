@@ -777,6 +777,19 @@
         "decimals": 1,
         "default": 125
     },
+    "hot_water_temperature_adv_uspec": {
+        "address": {
+            "h2k": "HouseFile,House,BaseLoads,AdvancedUserSpecified,@hotWaterTemperature",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,HotWaterTemperature"
+        },
+        "units": {
+            "unit_type": "temperature",
+            "h2k_units": "C",
+            "hpxml_units": "F"
+        },
+        "decimals": 1,
+        "default": 125
+    },
     "heat_pump_heating_efficiency": {
         "address": {
             "h2k": "Specifications,HeatingEfficiency,@value",

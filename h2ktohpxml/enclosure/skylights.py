@@ -1,8 +1,16 @@
 from ..utils import obj, h2k
 
 
-def get_skylights(h2k_skylights, model_data):
-    parent_id = model_data.get_roof_count()
+def get_skylights(h2k_skylights, skylight_attachment, model_data):
+    if skylight_attachment == {}:
+        return {
+            "hpxml_skylights": [],
+            "total_skylight_area": 0,
+        }
+
+    # We get the parent ID at the level above because we need to know the type of ceiling/roof/attic we're dealing with
+    # For ceilings with attics, we use the floor of the attic (representing a skylight with a shaft through the attic)
+    # For flat/cathedral ceilings, we use the roof ID
 
     if not bool(h2k_skylights):
         return {"hpxml_skylights": [], "total_skylight_area": 0}
@@ -72,7 +80,7 @@ def get_skylights(h2k_skylights, model_data):
                     if has_overhang
                     else {}
                 ),
-                "AttachedToRoof": {"@idref": f"Roof{parent_id}"},
+                **skylight_attachment,
                 "extension": {"H2kLabel": f"{skylight_label}"},
             }
 

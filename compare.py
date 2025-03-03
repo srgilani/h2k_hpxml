@@ -74,7 +74,9 @@ for filepath in h2k_files:
 
         hpxml_string = h2ktohpxml(h2k_string)
 
-        with open(f"{hpxml_os_path}/{dest_hpxml_path}/{hpxml_filename}", "w") as f:
+        with open(
+            f"{hpxml_os_path}/{dest_hpxml_path}/{hpxml_filename}", "w", encoding="utf-8"
+        ) as f:
             f.write(hpxml_string)
 
         result = run_hpxml_os(hpxml_filename, dest_hpxml_path)
@@ -108,5 +110,5 @@ print("DONE")
 # print(compare_dict_out)
 
 
-with open(f"{dest_compare_data}/compare_data.json", "w") as f:
+with open(f"{dest_compare_data}/systems_compare_data.json", "w") as f:
     json.dump(compare_dict_out, f, indent=4)

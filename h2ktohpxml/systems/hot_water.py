@@ -7,10 +7,17 @@ from ..utils import obj, h2k
 def get_hot_water_systems(h2k_dict, model_data):
 
     hot_water_temperature = h2k.get_number_field(h2k_dict, "hot_water_temperature")
+    hot_water_temperature_adv_uspec = h2k.get_number_field(
+        h2k_dict, "hot_water_temperature_adv_uspec"
+    )
 
     model_data.set_building_details(
         {
-            "hot_water_temperature": hot_water_temperature,
+            "hot_water_temperature": (
+                hot_water_temperature
+                if hot_water_temperature > 0
+                else hot_water_temperature_adv_uspec
+            ),
         }
     )
 

@@ -31,6 +31,8 @@ def get_ceilings(h2k_dict, model_data={}):
         construction_type = obj.get_val(ceiling, "Construction,Type,English")
         ceiling_label = ceiling.get("Label", "No Label")
 
+        skylight_attachment = {}
+
         if construction_type.lower() == "attic/gable":
             # attic/gable => Floor (ceiling), 2x gable end walls, roof, attic (AtticType = Attic)
             model_data.inc_wall_count()
@@ -139,6 +141,11 @@ def get_ceilings(h2k_dict, model_data={}):
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
 
+            skylight_attachment = {
+                "AttachedToRoof": {"@idref": roof_id},
+                "AttachedToFloor": {"@idref": floor_id},
+            }
+
             hpxml_attics = [*hpxml_attics, new_attic]
             hpxml_roofs = [*hpxml_roofs, new_roof]
             hpxml_walls = [*hpxml_walls, new_wall]
@@ -244,6 +251,11 @@ def get_ceilings(h2k_dict, model_data={}):
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
 
+            skylight_attachment = {
+                "AttachedToRoof": {"@idref": roof_id},
+                "AttachedToFloor": {"@idref": floor_id},
+            }
+
             hpxml_attics = [*hpxml_attics, new_attic]
             hpxml_roofs = [*hpxml_roofs, new_roof]
             hpxml_floors = [*hpxml_floors, new_floor]
@@ -296,6 +308,10 @@ def get_ceilings(h2k_dict, model_data={}):
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
 
+            skylight_attachment = {
+                "AttachedToRoof": {"@idref": roof_id},
+            }
+
             hpxml_attics = [*hpxml_attics, new_attic]
             hpxml_roofs = [*hpxml_roofs, new_roof]
 
@@ -342,6 +358,10 @@ def get_ceilings(h2k_dict, model_data={}):
                 },
                 "AttachedToRoof": {"@idref": roof_id},
                 "extension": {"H2kLabel": f"{ceiling_label}"},
+            }
+
+            skylight_attachment = {
+                "AttachedToRoof": {"@idref": roof_id},
             }
 
             hpxml_attics = [*hpxml_attics, new_attic]
@@ -470,6 +490,11 @@ def get_ceilings(h2k_dict, model_data={}):
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
 
+            skylight_attachment = {
+                "AttachedToRoof": {"@idref": roof_id},
+                "AttachedToFloor": {"@idref": floor_id},
+            }
+
             hpxml_attics = [*hpxml_attics, new_attic]
             hpxml_roofs = [*hpxml_roofs, new_roof]
             hpxml_walls = [*hpxml_walls, new_wall]
@@ -483,7 +508,7 @@ def get_ceilings(h2k_dict, model_data={}):
         h2k_windows = ceiling.get("Components", {}).get("Window", {})
 
         # Windows
-        window_output = get_skylights(h2k_windows, model_data)
+        window_output = get_skylights(h2k_windows, skylight_attachment, model_data)
         hpxml_skylights = [*hpxml_skylights, *window_output["hpxml_skylights"]]
 
     return {

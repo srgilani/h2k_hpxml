@@ -48,7 +48,7 @@ for filepath in h2k_files:
     # with open(f"./tests/files/{filepath.split("/")[-1].replace(".h2k",".xml")}", "w") as f:
 
     with open(
-        f"{hpxml_os_path}/{dest_hpxml_path}/{filepath.split("/")[-1].replace(".h2k",".xml").replace(" ","-")}",
+        f"{hpxml_os_path}/{dest_hpxml_path}/{filepath.split("/")[-1].replace(".h2k",".xml").replace(".H2K",".xml").replace(" ","-")}",
         "w",
     ) as f:
         f.write(hpxml_string)
