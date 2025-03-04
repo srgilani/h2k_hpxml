@@ -1,5 +1,5 @@
 import math
-
+from collections import OrderedDict
 from ..utils import obj, h2k
 
 
@@ -7,11 +7,13 @@ from ..utils import obj, h2k
 # "air"
 # "hydronic"
 # Distribution System Efficiency (DSE) is NOT SUPPORTED (no h2k representation)
+# This function must run after heating/cooling/heat pump systems are built
 def get_hvac_distribution(h2k_dict, model_data):
 
-    hvac_dist_type = model_data.get_hvac_distribution_type()
+    heating_dist_type = model_data.get_heating_distribution_type()
+    ac_hp_dist_type = model_data.get_ac_hp_distribution_type()
     primary_heating_id = model_data.get_system_id("primary_heating")
-    air_conditioner_id = model_data.get_system_id("air_conditioner")
+    air_conditioning_id = model_data.get_system_id("air_conditioning")
     air_heat_pump_id = model_data.get_system_id("air_heat_pump")
     ground_heat_pump_id = model_data.get_system_id("ground_heat_pump")
     water_heat_pump_id = model_data.get_system_id("water_heat_pump")
@@ -20,67 +22,85 @@ def get_hvac_distribution(h2k_dict, model_data):
     ag_heated_floor_area = model_data.get_building_detail("ag_heated_floor_area")
     bg_heated_floor_area = model_data.get_building_detail("bg_heated_floor_area")
 
-    hvac_dist_dict = {}
+    hvac_dist_systems = []
 
-    if "air_" in str(hvac_dist_type):
-        # “regular velocity”, “gravity”, or “fan coil” are the supported types
-        # Not all of these are defined in h2k
-        [base_type, sub_type] = hvac_dist_type.split("_")
-        # Currently only handling regular velocity with default duct inputs
-        hvac_dist_dict = {
-            "SystemIdentifier": {"@id": model_data.get_system_id("hvac_distribution")},
-            "DistributionSystemType": {
-                "AirDistribution": {
-                    "AirDistributionType": sub_type,
-                    "DuctLeakageMeasurement": [
-                        {
-                            "DuctType": "supply",
-                            "DuctLeakage": {
-                                "Units": "CFM25",
-                                "Value": 0,
-                                "TotalOrToOutside": "to outside",
+    # We have already "activated" distribution system types with the model_data.set_xx_distribution_type() method
+    # We combine them here and loop through them, removing duplicates such that if two systems call for the same
+    # type of distribution they will use the same one.
+    # This behaviour is supported by the pre-defined distribution system ids set up at the beginning of the get_systems() function
+    for hvac_dist_type in list(
+        OrderedDict.fromkeys([heating_dist_type, ac_hp_dist_type])
+    ):
+        if "air_" in str(hvac_dist_type):
+            # “regular velocity”, “gravity”, or “fan coil” are the supported types
+            # Not all of these are defined in h2k
+            [base_type, sub_type] = hvac_dist_type.split("_")
+            # Currently only handling regular velocity with default duct inputs
+            hvac_dist_dict = {
+                "SystemIdentifier": {
+                    "@id": model_data.get_system_id("hvac_air_distribution")
+                },
+                "DistributionSystemType": {
+                    "AirDistribution": {
+                        "AirDistributionType": sub_type,
+                        "DuctLeakageMeasurement": [
+                            {
+                                "DuctType": "supply",
+                                "DuctLeakage": {
+                                    "Units": "CFM25",
+                                    "Value": 0,
+                                    "TotalOrToOutside": "to outside",
+                                },
                             },
-                        },
-                        {
-                            "DuctType": "return",
-                            "DuctLeakage": {
-                                "Units": "CFM25",
-                                "Value": 0,
-                                "TotalOrToOutside": "to outside",
+                            {
+                                "DuctType": "return",
+                                "DuctLeakage": {
+                                    "Units": "CFM25",
+                                    "Value": 0,
+                                    "TotalOrToOutside": "to outside",
+                                },
                             },
-                        },
-                    ],
-                    "Ducts": [
-                        {
-                            "SystemIdentifier": {"@id": "Ducts1"},
-                            "DuctType": "supply",
-                            "DuctInsulationRValue": 0.0,
-                        },
-                        {
-                            "SystemIdentifier": {"@id": "Ducts2"},
-                            "DuctType": "return",
-                            "DuctInsulationRValue": 0.0,
-                        },
-                    ],
-                }
-            },
-            "ConditionedFloorAreaServed": ag_heated_floor_area + bg_heated_floor_area,
-        }
+                        ],
+                        "Ducts": [
+                            {
+                                "SystemIdentifier": {"@id": "Ducts1"},
+                                "DuctType": "supply",
+                                "DuctInsulationRValue": 0.0,
+                            },
+                            {
+                                "SystemIdentifier": {"@id": "Ducts2"},
+                                "DuctType": "return",
+                                "DuctInsulationRValue": 0.0,
+                            },
+                        ],
+                    }
+                },
+                "ConditionedFloorAreaServed": ag_heated_floor_area
+                + bg_heated_floor_area,
+            }
 
-    elif "hydronic_" in str(hvac_dist_type):
-        # HydronicDistributionType choices are “radiator”, “baseboard”, “radiant floor”, “radiant ceiling”, or “water loop”.
-        # However, h2k does not include sufficient information to determine which is used, so we default to "radiator" (without radiant floor explicitly defined)
+            hvac_dist_systems = [*hvac_dist_systems, hvac_dist_dict]
 
-        [base_type, sub_type] = hvac_dist_type.split("_")
-        # Currently only handling regular velocity with default duct inputs
-        hvac_dist_dict = {
-            "SystemIdentifier": {"@id": model_data.get_system_id("hvac_distribution")},
-            "DistributionSystemType": {
-                "HydronicDistribution": {
-                    "HydronicDistributionType": sub_type,
-                }
-            },
-            "ConditionedFloorAreaServed": ag_heated_floor_area + bg_heated_floor_area,
-        }
+        elif "hydronic_" in str(hvac_dist_type):
+            # HydronicDistributionType choices are “radiator”, “baseboard”, “radiant floor”, “radiant ceiling”, or “water loop”.
+            # However, h2k does not include sufficient information to determine which is used, so we default to "radiator" (without radiant floor explicitly defined)
 
-    return hvac_dist_dict
+            [base_type, sub_type] = hvac_dist_type.split("_")
+
+            # Currently only handling regular velocity with default duct inputs
+            hvac_dist_dict = {
+                "SystemIdentifier": {
+                    "@id": model_data.get_system_id("hvac_hydronic_distribution")
+                },
+                "DistributionSystemType": {
+                    "HydronicDistribution": {
+                        "HydronicDistributionType": sub_type,
+                    }
+                },
+                "ConditionedFloorAreaServed": ag_heated_floor_area
+                + bg_heated_floor_area,
+            }
+
+            hvac_dist_systems = [*hvac_dist_systems, hvac_dist_dict]
+
+    return hvac_dist_systems

@@ -24,8 +24,16 @@ class ModelData:
         # Tracking info for Systems
         self.is_hvac_translated = False
         self.is_dhw_translated = False
-        self.hvac_distribution_type = None
+        self.heating_distribution_type = None
+        self.ac_hp_distribution_type = None
         self.system_ids = {"primary_heating": "HeatingSystem1"}
+
+        # Results
+        self.results = {
+            "General": {},
+            "SOC": {},
+            "Reference": {},
+        }
 
         # Tracking errors
         self.error_list = []
@@ -160,11 +168,17 @@ class ModelData:
     def get_is_dhw_translated(self):
         return self.is_dhw_translated
 
-    def set_hvac_distribution_type(self, val):
-        self.hvac_distribution_type = val
+    def set_heating_distribution_type(self, val):
+        self.heating_distribution_type = val
 
-    def get_hvac_distribution_type(self):
-        return self.hvac_distribution_type
+    def get_heating_distribution_type(self):
+        return self.heating_distribution_type
+
+    def set_ac_hp_distribution_type(self, val):
+        self.ac_hp_distribution_type = val
+
+    def get_ac_hp_distribution_type(self):
+        return self.ac_hp_distribution_type
 
     # tracking hvac system ids
 
@@ -185,3 +199,47 @@ class ModelData:
             return default
         else:
             return value
+
+    def set_results(self, h2k_dict={}):
+        file_results = (
+            h2k_dict.get("HouseFile", {}).get("AllResults", {}).get("Results", [])
+        )
+
+        if isinstance(file_results, list):
+            for res in file_results:
+                house_code = res.get("@houseCode", "")
+                upgrade_case = "@type" in res.keys()
+
+                if (
+                    house_code == "UserHouse" or "@houseCode" not in res.keys()
+                ) and not (upgrade_case):
+                    self.results = {
+                        **self.results,
+                        "General": res,
+                    }
+
+                elif house_code == "SOC" and not (upgrade_case):
+                    self.results = {
+                        **self.results,
+                        "SOC": res,
+                    }
+
+                elif house_code == "Reference" and not (upgrade_case):
+                    self.results = {
+                        **self.results,
+                        "Reference": res,
+                    }
+
+        return
+
+    def get_results(self, res_type=""):
+        results = {}
+        if res_type == "":
+            # when results type isn't specified, we assume we're looking for the base results
+            # Attempt to return SOC results, and if they're not present return general mode.
+            results = self.results.get("SOC", self.results.get("General", {}))
+
+        else:
+            results = self.results.get(res_type, {})
+
+        return results

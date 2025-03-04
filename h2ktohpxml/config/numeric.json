@@ -511,6 +511,13 @@
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,HeatingCapacity"
         }
     },
+    "baseboard_sizing_factor": {
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,@sizingFactor",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,extension,HeatingAutosizingFactor"
+        }
+    },
     "baseboard_efficiency": {
         "units": {
             "unit_type": "fraction",
@@ -566,6 +573,38 @@
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,Furnace,extension,PilotLightBtuh"
         }
     },
+    "ac_sizing_factor": {
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,@sizingFactor",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,CoolingSystem,extension,CoolingAutosizingFactor"
+        }
+    },
+    "ac_cooling_efficiency": {
+        "address": {
+            "h2k": "Specifications,Efficiency,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,CoolingSystem,AnnualCoolingEfficiency"
+        },
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "default": 0
+    },
+    "ac_capacity": {
+        "units": {
+            "unit_type": "power",
+            "h2k_units": "kW",
+            "hpxml_units": "BTU/h"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,OutputCapacity,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,CoolingSystem,HeatingCapacity"
+        }
+    },
     "setpoint_heating_day": {
         "units": {
             "unit_type": "temperature",
@@ -607,6 +646,180 @@
         "address": {
             "h2k": "HouseFile,House,Temperatures,MainFloors,@nighttimeSetbackDuration",
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACControl,TotalSetbackHoursperWeekHeating"
+        }
+    },
+    "water_faucet_flow_rate": {
+        "address": {
+            "h2k": "HouseFile,House,BaseLoads,WaterUsage,BathroomFaucets,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterFixture,FlowRate"
+        },
+        "units": {
+            "unit_type": "liquid_flow_rate",
+            "h2k_units": "L/min",
+            "hpxml_units": "gpm_us"
+        },
+        "decimals": 2,
+        "default": 2.2
+    },
+    "shower_head_flow_rate": {
+        "address": {
+            "h2k": "HouseFile,House,BaseLoads,WaterUsage,Shower,FlowRate,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterFixture,FlowRate"
+        },
+        "units": {
+            "unit_type": "liquid_flow_rate",
+            "h2k_units": "L/min",
+            "hpxml_units": "gpm_us"
+        },
+        "decimals": 2,
+        "default": 2.5
+    },
+    "hot_water_tank_volume": {
+        "address": {
+            "h2k": "TankVolume,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,TankVolume"
+        },
+        "units": {
+            "unit_type": "volume",
+            "h2k_units": "L",
+            "hpxml_units": "gal_us"
+        },
+        "decimals": 1,
+        "default": 50
+    },
+    "hot_water_load_fraction": {
+        "address": {
+            "h2k": "@fraction",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,FractionDHWLoadServed"
+        },
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "default": 1
+    },
+    "hot_water_heating_capacity": {
+        "address": {
+            "h2k": "EnergyFactor,@inputCapacity",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,HeatingCapacity"
+        },
+        "units": {
+            "unit_type": "power",
+            "h2k_units": "W",
+            "hpxml_units": "BTU/h"
+        },
+        "decimals": 2,
+        "default": 0
+    },
+    "hot_water_energy_factor": {
+        "address": {
+            "h2k": "EnergyFactor,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,EnergyFactor"
+        },
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 4,
+        "default": 0.9
+    },
+    "hot_water_heat_pump_cop": {
+        "address": {
+            "h2k": "@heatPumpCoefficient",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,EnergyFactor"
+        },
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "default": 0
+    },
+    "hot_water_temperature": {
+        "address": {
+            "h2k": "HouseFile,House,BaseLoads,WaterUsage,@temperature",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,HotWaterTemperature"
+        },
+        "units": {
+            "unit_type": "temperature",
+            "h2k_units": "C",
+            "hpxml_units": "F"
+        },
+        "decimals": 1,
+        "default": 125
+    },
+    "heat_pump_heating_efficiency": {
+        "address": {
+            "h2k": "Specifications,HeatingEfficiency,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,AnnualHeatingEfficiency"
+        },
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "default": 0
+    },
+    "heat_pump_cooling_efficiency": {
+        "address": {
+            "h2k": "Specifications,CoolingEfficiency,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,AnnualCoolingEfficiency"
+        },
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "default": 0
+    },
+    "heat_pump_capacity": {
+        "units": {
+            "unit_type": "power",
+            "h2k_units": "kW",
+            "hpxml_units": "BTU/h"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,OutputCapacity,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,HeatingCapacity"
+        }
+    },
+    "heat_pump_switchover_temp": {
+        "units": {
+            "unit_type": "temperature",
+            "h2k_units": "C",
+            "hpxml_units": "F"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Temperature,CutoffType,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,BackupHeatingSwitchoverTemperature"
+        }
+    },
+    "cooling_sensible_heat_fraction": {
+        "decimals": 2,
+        "address": {
+            "h2k": "CoolingParameters,@sensibleHeatRatio",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,CoolingSensibleHeatFraction"
+        }
+        
+    },
+    "dwhr_efficiency": {
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "%",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "@effectivenessAt9.5",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,HotWaterDistribution,DrainWaterHeatRecovery,Efficiency"
         }
     }
 }

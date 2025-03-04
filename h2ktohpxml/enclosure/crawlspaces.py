@@ -65,6 +65,12 @@ def get_crawlspaces(h2k_dict, model_data={}):
             "outside" if is_open_crawlspace else "crawlspace - conditioned"
         )
 
+        model_data.set_building_details(
+            {
+                "crawlspace_location": interior_adjacent,
+            }
+        )
+
         # Get required details from h2k crawlspace
         is_crawlspace_rectangular = h2k.get_selection_field(
             crawlspace, "foundation_rectangular"

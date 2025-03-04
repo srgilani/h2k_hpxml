@@ -121,6 +121,20 @@ unit_map = {
         "MJ/day": {"BTU/h": {"scale": 39.4924, "offset": 0}},
         "BTU/h": {"MJ/day": {"scale": 0.025321328, "offset": 0}},
     },
+    "liquid_flow_rate": {
+        "L/min": {
+            "gpm_us": {"scale": 0.264172, "offset": 0},
+            "gpm_imp": {"scale": 0.219969, "offset": 0},
+        },
+        "gpm_us": {
+            "L/min": {"scale": 3.78541, "offset": 0},
+            "gpm_imp": {"scale": 0.832674, "offset": 0},
+        },
+        "gpm_imp": {
+            "L/min": {"scale": 4.54609, "offset": 0},
+            "gpm_us": {"scale": 1.20095, "offset": 0},
+        },
+    },
 }
 
 

@@ -6,10 +6,10 @@ from ..utils import obj, h2k
 fireplace_stove_equip_map = {
     "advanced airtight wood stove": "stove",
     "1st option with catalytic converter": "stove",
-    "conventional furnace": None,
+    "conventional furnace": "furnace",
     "conventional stove": "stove",
     "pellet stove": "stove",
-    "masonry heater": None,
+    "masonry heater": "fireplace",
     "conventional fireplace": "fireplace",
     "fireplace insert": "fireplace",
 }
@@ -37,11 +37,8 @@ def get_primary_heating_system(h2k_dict, model_data):
         # TODO: Remove is_hvac_translated flag after testing
         model_data.set_is_hvac_translated(True)
 
-        furnace_subtype = (
-            str(obj.get_val(type1_data, "Equipment,EquipmentType,English"))
-        ).lower()
-
-        hpxml_heating_type = fireplace_stove_equip_map.get(furnace_subtype, None)
+        # A slightly unique selection field, used to determine whether to build a furnace (default), stove, or fireplace
+        hpxml_heating_type = h2k.get_selection_field(type1_data, "furnace_equip_type")
 
         if hpxml_heating_type == "stove":
             # ignores differences between furnaces and boilers because HPXML has an explicit stove component
@@ -50,6 +47,7 @@ def get_primary_heating_system(h2k_dict, model_data):
             # ignores differences between furnaces and boilers because HPXML has an explicit fireplace component
             primary_heating_dict = get_fireplace(type1_data, model_data)
         else:
+            # Default, builds furnace
             primary_heating_dict = get_furnace(type1_data, model_data)
 
     elif type1_type == "Boiler":
@@ -68,6 +66,27 @@ def get_electric_resistance(type1_data, model_data):
     baseboard_capacity = h2k.get_number_field(type1_data, "baseboard_capacity")
     baseboard_efficiency = h2k.get_number_field(type1_data, "baseboard_efficiency")
 
+    baseboard_sizing_factor = h2k.get_number_field(
+        type1_data, "baseboard_sizing_factor"
+    )
+    is_auto_sized = (
+        "Calculated" == obj.get_val(type1_data, "Specifications,OutputCapacity,English")
+        or baseboard_capacity == 0
+    )
+
+    model_data.set_building_details(
+        {
+            "heat_pump_backup_type": "separate",
+            "heat_pump_backup_system": "baseboards",
+            "heat_pump_backup_fuel": "electricity",
+            "heat_pump_backup_efficiency": baseboard_efficiency,
+            "heat_pump_backup_eff_unit": "Percent",
+            "heat_pump_backup_autosized": is_auto_sized,
+            "heat_pump_backup_capacity": baseboard_capacity,
+            "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+        }
+    )
+
     # By default we assume electric resistance, overwriting with radiant if present
     # “baseboard”, “radiant floor”, or “radiant ceiling”
     elec_resistance = {
@@ -76,16 +95,18 @@ def get_electric_resistance(type1_data, model_data):
             "ElectricResistance": {"ElectricDistribution": "baseboard"}
         },
         "HeatingSystemFuel": "electricity",
-        "HeatingCapacity": baseboard_capacity,
+        **({} if is_auto_sized else {"HeatingCapacity": baseboard_capacity}),
         "AnnualHeatingEfficiency": {
             "Units": "Percent",  # Only unit type allowed here. Note actual value must be a fraction
             "Value": baseboard_efficiency,
         },
         "FractionHeatLoadServed": 1,  # Hardcoded for now
+        **(
+            {"extension": {"HeatingAutosizingFactor": baseboard_sizing_factor}}
+            if is_auto_sized
+            else {}
+        ),
     }
-
-    # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
-    # Also must sum to 1 across all heating systems
 
     return elec_resistance
 
@@ -111,10 +132,25 @@ def get_furnace(type1_data, model_data):
 
     furnace_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
 
+    model_data.set_building_details(
+        {
+            "heat_pump_backup_type": "integrated",
+            "heat_pump_backup_system": "furnace",
+            "heat_pump_backup_fuel": furnace_fuel_type,
+            "heat_pump_backup_efficiency": furnace_efficiency,
+            "heat_pump_backup_eff_unit": "Percent" if is_steady_state else "AFUE",
+            "heat_pump_backup_autosized": is_auto_sized,
+            "heat_pump_backup_capacity": furnace_capacity,
+            "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+        }
+    )
+
     # TODO: confirm desired behaviour around auto-sizing
     furnace_dict = {
         "SystemIdentifier": {"@id": model_data.get_system_id("primary_heating")},
-        "DistributionSystem": {"@idref": model_data.get_system_id("hvac_distribution")},
+        "DistributionSystem": {
+            "@idref": model_data.get_system_id("hvac_air_distribution")
+        },
         "HeatingSystemType": {
             "Furnace": None
         },  # potential to add pilot light info later
@@ -134,9 +170,6 @@ def get_furnace(type1_data, model_data):
         ),
     }
 
-    # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
-    # Also must sum to 1 across all heating systems
-
     # Add pilot light if present
     if furnace_pilot_light > 0:
         furnace_dict["HeatingSystemType"] = {
@@ -148,7 +181,7 @@ def get_furnace(type1_data, model_data):
 
     # No h2k representation for "gravity" distribution type
     # Might need to update this based on logic around system types
-    model_data.set_hvac_distribution_type("air_regular velocity")
+    model_data.set_heating_distribution_type("air_regular velocity")
 
     return furnace_dict
 
@@ -174,10 +207,25 @@ def get_boiler(type1_data, model_data):
 
     boiler_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
 
+    model_data.set_building_details(
+        {
+            "heat_pump_backup_type": "separate",
+            "heat_pump_backup_system": "boiler",
+            "heat_pump_backup_fuel": boiler_fuel_type,
+            "heat_pump_backup_efficiency": boiler_efficiency,
+            "heat_pump_backup_eff_unit": "Percent" if is_steady_state else "AFUE",
+            "heat_pump_backup_autosized": is_auto_sized,
+            "heat_pump_backup_capacity": boiler_capacity,
+            "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+        }
+    )
+
     # TODO: confirm desired behaviour around auto-sizing
     boiler_dict = {
         "SystemIdentifier": {"@id": model_data.get_system_id("primary_heating")},
-        "DistributionSystem": {"@idref": model_data.get_system_id("hvac_distribution")},
+        "DistributionSystem": {
+            "@idref": model_data.get_system_id("hvac_hydronic_distribution")
+        },
         "HeatingSystemType": {
             "Boiler": None
         },  # potential to add pilot light info later
@@ -198,9 +246,6 @@ def get_boiler(type1_data, model_data):
         ),
     }
 
-    # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
-    # Also must sum to 1 across all heating systems
-
     # Add pilot light if present
     if boiler_pilot_light > 0:
         boiler_dict["HeatingSystemType"] = {
@@ -214,7 +259,8 @@ def get_boiler(type1_data, model_data):
     # Might need to update this based on logic around system types
     # TODO: change distribution type to "radiant floor" if in-floor is defined
     # Option to use air_fan coil if boiler has a shared water loop with a heat pump
-    model_data.set_hvac_distribution_type("hydronic_radiator")
+    model_data.set_heating_distribution_type("hydronic_radiator")
+    # model_data.set_heating_distribution_type("air_regular velocity")
 
     return boiler_dict
 
@@ -234,6 +280,19 @@ def get_fireplace(type1_data, model_data):
     )
 
     fireplace_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
+
+    model_data.set_building_details(
+        {
+            "heat_pump_backup_type": "separate",
+            "heat_pump_backup_system": "fireplace",
+            "heat_pump_backup_fuel": fireplace_fuel_type,
+            "heat_pump_backup_efficiency": fireplace_efficiency,
+            "heat_pump_backup_eff_unit": "Percent" if is_steady_state else "AFUE",
+            "heat_pump_backup_autosized": is_auto_sized,
+            "heat_pump_backup_capacity": fireplace_capacity,
+            "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+        }
+    )
 
     # TODO: confirm desired behaviour around auto-sizing
     fireplace_dict = {
@@ -255,9 +314,6 @@ def get_fireplace(type1_data, model_data):
         ),
     }
 
-    # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
-    # Also must sum to 1 across all heating systems
-
     return fireplace_dict
 
 
@@ -277,6 +333,19 @@ def get_stove(type1_data, model_data):
 
     stove_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
 
+    model_data.set_building_details(
+        {
+            "heat_pump_backup_type": "separate",
+            "heat_pump_backup_system": "stove",
+            "heat_pump_backup_fuel": stove_fuel_type,
+            "heat_pump_backup_efficiency": stove_efficiency,
+            "heat_pump_backup_eff_unit": "Percent" if is_steady_state else "AFUE",
+            "heat_pump_backup_autosized": is_auto_sized,
+            "heat_pump_backup_capacity": stove_capacity,
+            "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+        }
+    )
+
     # TODO: confirm desired behaviour around auto-sizing
     stove_dict = {
         "SystemIdentifier": {"@id": model_data.get_system_id("primary_heating")},
@@ -294,8 +363,5 @@ def get_stove(type1_data, model_data):
             else {}
         ),
     }
-
-    # TODO: FractionHeatLoadServed is not allowed if this is a heat pump backup system
-    # Also must sum to 1 across all heating systems
 
     return stove_dict

@@ -39,7 +39,7 @@ print("h2k_files", h2k_files)
 
 for filepath in h2k_files:
     print("================================================")
-    print("filepath",filepath)
+    print("filepath", filepath)
     with open(filepath, "r", encoding="utf-8") as f:
         h2k_string = f.read()
 
@@ -47,5 +47,8 @@ for filepath in h2k_files:
 
     # with open(f"./tests/files/{filepath.split("/")[-1].replace(".h2k",".xml")}", "w") as f:
 
-    with open(f"{hpxml_os_path}/{dest_hpxml_path}/{filepath.split("/")[-1].replace(".h2k",".xml")}", "w") as f:
+    with open(
+        f"{hpxml_os_path}/{dest_hpxml_path}/{filepath.split("/")[-1].replace(".h2k",".xml").replace(" ","-")}",
+        "w",
+    ) as f:
         f.write(hpxml_string)
