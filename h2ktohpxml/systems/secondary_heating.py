@@ -9,21 +9,21 @@ from ..utils import obj, h2k
 # Translates data from the supplementary heating systems section
 # All FractionHeatLoadServed elements hardcoded at 0 until we figure out how to determine this
 def get_secondary_heating_systems(h2k_dict, model_data):
-
-    results = model_data.get_results("SOC")
+    remaining_heating_fraction = 1
+    # results = model_data.get_results("SOC")
 
     if (
         "SupplementaryHeatingSystems"
         not in obj.get_val(h2k_dict, "HouseFile,House,HeatingCooling").keys()
     ):
-        return []
+        return [], remaining_heating_fraction
 
     suppl_heating_systems = obj.get_val(
         h2k_dict, "HouseFile,House,HeatingCooling,SupplementaryHeatingSystems,System"
     )
 
     if suppl_heating_systems == {}:
-        return []
+        return [], remaining_heating_fraction
 
     # Always process as array
     suppl_heating_systems = (
@@ -34,93 +34,38 @@ def get_secondary_heating_systems(h2k_dict, model_data):
 
     secondary_heating_results = []
 
-    # ===================== START DETERMINATION OF FractionHeatLoadServed ===================== #
-    # CHECKING RESULTS TO DETERMINE FRACTIONHEATLOAD NOT CURRENTLY USED
-    # Look at results to determine fraction of heating loads served by each system
-    # Note that we have to look at whether a pilot light is present and subtract that amount
-    primary_heating_results = obj.get_val(results, "Annual,Consumption,SpaceHeating")
-    has_heat_pump = (
-        float(obj.get_val(results, "Annual,Consumption,Electrical,@heatPump")) > 0
-    )
-
-    suppl_heating_results = obj.get_val(
-        results, "Annual,Consumption,SupplementalHeating"
-    )
-
-    primary_pilot_GJpery = model_data.get_building_detail("primary_pilot_light_GJpery")
-
-    # without pilot light
-    primary_heating_GJpery = max(
-        0, float(primary_heating_results.get("@primary", 0)) - primary_pilot_GJpery
-    )
-
-    # The "secondary" heating energy section in the results only holds heat pump
-    heat_pump_heating_GJpery = (
-        float(primary_heating_results.get("@secondary", 0)) if has_heat_pump else 0
-    )
-
-    total_annual_heating_GJpery = primary_heating_GJpery + heat_pump_heating_GJpery
-    heating_fraction_dict = {
-        "primary": {
-            "value": primary_heating_GJpery,
-            "fraction": primary_heating_GJpery / total_annual_heating_GJpery,
-        },
-        "secondary": {
-            "value": heat_pump_heating_GJpery,
-            "fraction": heat_pump_heating_GJpery / total_annual_heating_GJpery,
-        },
-        "system1": {"value": 0, "fraction": 0},
-        "system2": {"value": 0, "fraction": 0},
-        "system3": {"value": 0, "fraction": 0},
-        "system4": {"value": 0, "fraction": 0},
-        "system5": {"value": 0, "fraction": 0},
-    }
-
-    for suppl_sys_key in suppl_heating_results.keys():
-        heating_energy_value = round(float(suppl_heating_results[suppl_sys_key]), 4)
-
-        rank = suppl_sys_key.replace("@system", "")
-
-        matching_system = [
-            float(x.get("Specifications", {}).get("@pilotLight", 0))
-            for x in suppl_heating_systems
-            if x.get("@rank", None) == rank
-        ]
-
-        matching_system_pilot_light_GJpery = round(
-            (matching_system[0] if len(matching_system) > 0 else 0) * 365 / 1000, 4
-        )
-
-        total_annual_heating_GJpery += max(
-            0, heating_energy_value - matching_system_pilot_light_GJpery
-        )
-
-        heating_fraction_dict[f"system{rank}"] = {
-            "value": max(0, heating_energy_value - matching_system_pilot_light_GJpery),
-            "fraction": 0,
-        }
-
-    # Make sure that our fractions always exactly equal 1 by tracking the remainder and reassigning it to the primary system
-    remaining_fraction = 1
-    for sys_key in heating_fraction_dict.keys():
-        fraction = heating_fraction_dict[sys_key]["value"] / total_annual_heating_GJpery
-        heating_fraction_dict[sys_key] = {
-            "value": heating_fraction_dict[sys_key]["value"],
-            "fraction": fraction,
-        }
-
-        if sys_key != "primary":
-            remaining_fraction -= fraction
-
-    heating_fraction_dict["primary"] = {
-        "value": heating_fraction_dict["primary"]["value"],
-        "fraction": remaining_fraction,
-    }
-
-    # ===================== END DETERMINATION OF FractionHeatLoadServed ===================== #
-
     suppl_heating_distribution_types = []
+
     for system_data in suppl_heating_systems:
+        # Determine fraction heating load, if any
+        suppl_heating_usage = obj.get_val(system_data, "Specifications,Usage,English")
+        suppl_heating_location = obj.get_val(
+            system_data, "Specifications,LocationHeated,English"
+        )
+
+        suppl_heating_area_heated = h2k.get_number_field(
+            system_data, "suppl_heating_area_heated"
+        )
+
+        fraction_floor_area = 0
+        if (suppl_heating_usage == "Always") and (suppl_heating_location != "Exterior"):
+            # Calculate fraction based on floor area served
+            rank = obj.get_val(system_data, "@rank")
+            ag_heated_floor_area = model_data.get_building_detail(
+                "ag_heated_floor_area"
+            )
+            bg_heated_floor_area = model_data.get_building_detail(
+                "bg_heated_floor_area"
+            )
+            fraction_floor_area = round(
+                suppl_heating_area_heated
+                / (ag_heated_floor_area + bg_heated_floor_area),
+                2,
+            )
+
+            remaining_heating_fraction = round(
+                remaining_heating_fraction - fraction_floor_area, 2
+            )
 
         system_type = h2k.get_selection_field(system_data, "suppl_heating_equip_type")
         flue_diameter = h2k.get_number_field(system_data, "suppl_heating_flue_diameter")
@@ -133,16 +78,18 @@ def get_secondary_heating_systems(h2k_dict, model_data):
 
         new_system = {}
         if system_type == "baseboard":
-            new_system = get_electric_resistance(system_data, system_type, model_data)
+            new_system = get_electric_resistance(
+                system_data, system_type, fraction_floor_area, model_data
+            )
 
         elif system_type == "stove":
-            new_system = get_stove(system_data, model_data)
+            new_system = get_stove(system_data, fraction_floor_area, model_data)
 
         elif system_type == "fireplace":
-            new_system = get_fireplace(system_data, model_data)
+            new_system = get_fireplace(system_data, fraction_floor_area, model_data)
 
         elif system_type == "furnace":
-            new_system = get_furnace(system_data, model_data)
+            new_system = get_furnace(system_data, fraction_floor_area, model_data)
             # Need this to be included here, so that the distribution system doesn't get missed
             suppl_heating_distribution_types = [
                 *suppl_heating_distribution_types,
@@ -150,36 +97,39 @@ def get_secondary_heating_systems(h2k_dict, model_data):
             ]
 
         elif system_type == "space heater":
-            new_system = get_space_heater(system_data, model_data)
+            new_system = get_space_heater(system_data, fraction_floor_area, model_data)
 
         elif system_type == "radiant floor":
             # Uses "Electric Resistance", always electric
-            new_system = get_electric_resistance(system_data, system_type, model_data)
+            new_system = get_electric_resistance(
+                system_data, system_type, fraction_floor_area, model_data
+            )
 
         elif system_type == "radiant ceiling":
             # Uses "Electric Resistance", always electric
-            new_system = get_electric_resistance(system_data, system_type, model_data)
+            new_system = get_electric_resistance(
+                system_data, system_type, fraction_floor_area, model_data
+            )
 
         elif system_type == "boiler":
             # The only way to get here is if the equipment type is set to "same as type 1"
-            new_system = get_boiler(system_data, model_data)
+            new_system = get_boiler(system_data, fraction_floor_area, model_data)
             suppl_heating_distribution_types = [
                 *suppl_heating_distribution_types,
                 "hydronic_radiator",
             ]
 
-        # new_system = get_suppl_heating_system(system_data, model_data)
         secondary_heating_results = [*secondary_heating_results, new_system]
 
     secondary_heating_results = [x for x in secondary_heating_results if x != {}]
 
     model_data.set_suppl_heating_distribution_types(suppl_heating_distribution_types)
 
-    return secondary_heating_results
+    return secondary_heating_results, remaining_heating_fraction
 
 
 # Translates electric suppl heating systems that use the "baseboard", "radiant floor", or "radiant ceiling" ElectricDistribution types
-def get_electric_resistance(system_data, system_type, model_data):
+def get_electric_resistance(system_data, system_type, fraction_floor_area, model_data):
     rank = obj.get_val(system_data, "@rank")
 
     suppl_heating_capacity = h2k.get_number_field(system_data, "suppl_heating_capacity")
@@ -200,13 +150,13 @@ def get_electric_resistance(system_data, system_type, model_data):
             "Units": "Percent",  # Only unit type allowed here. Note actual value must be a fraction
             "Value": suppl_heating_efficiency,
         },
-        "FractionHeatLoadServed": 0,  # Hardcoded for now
+        "FractionHeatLoadServed": fraction_floor_area,
     }
 
     return elec_resistance
 
 
-def get_furnace(system_data, model_data):
+def get_furnace(system_data, fraction_floor_area, model_data):
     rank = obj.get_val(system_data, "@rank")
     furnace_capacity = h2k.get_number_field(system_data, "suppl_heating_capacity")
     furnace_efficiency = h2k.get_number_field(system_data, "suppl_heating_efficiency")
@@ -231,7 +181,7 @@ def get_furnace(system_data, model_data):
             ),  # "AFUE" / "Percent"
             "Value": furnace_efficiency,
         },
-        "FractionHeatLoadServed": 0,
+        "FractionHeatLoadServed": fraction_floor_area,
     }
 
     # Add pilot light if present
@@ -246,7 +196,7 @@ def get_furnace(system_data, model_data):
     return furnace_dict
 
 
-def get_boiler(system_data, model_data):
+def get_boiler(system_data, fraction_floor_area, model_data):
     rank = obj.get_val(system_data, "@rank")
     boiler_capacity = h2k.get_number_field(system_data, "suppl_heating_capacity")
     boiler_efficiency = h2k.get_number_field(system_data, "suppl_heating_efficiency")
@@ -270,7 +220,7 @@ def get_boiler(system_data, model_data):
             ),  # "AFUE" / "Percent"
             "Value": boiler_efficiency,
         },
-        "FractionHeatLoadServed": 0,
+        "FractionHeatLoadServed": fraction_floor_area,
         "ElectricAuxiliaryEnergy": 0,  # Without this, HPXML assumes 330 kWh/y for oil and 170 kWh/y for gas boilers
     }
 
@@ -286,7 +236,7 @@ def get_boiler(system_data, model_data):
     return boiler_dict
 
 
-def get_fireplace(system_data, model_data):
+def get_fireplace(system_data, fraction_floor_area, model_data):
     rank = obj.get_val(system_data, "@rank")
     fireplace_capacity = h2k.get_number_field(system_data, "suppl_heating_capacity")
     fireplace_efficiency = h2k.get_number_field(system_data, "suppl_heating_efficiency")
@@ -305,13 +255,13 @@ def get_fireplace(system_data, model_data):
             "Units": "Percent",  # "AFUE" / "Percent"
             "Value": fireplace_efficiency,
         },
-        "FractionHeatLoadServed": 0,
+        "FractionHeatLoadServed": fraction_floor_area,
     }
 
     return fireplace_dict
 
 
-def get_stove(system_data, model_data):
+def get_stove(system_data, fraction_floor_area, model_data):
     rank = obj.get_val(system_data, "@rank")
     stove_capacity = h2k.get_number_field(system_data, "suppl_heating_capacity")
     stove_efficiency = h2k.get_number_field(system_data, "suppl_heating_efficiency")
@@ -327,13 +277,13 @@ def get_stove(system_data, model_data):
             "Units": "Percent",
             "Value": stove_efficiency,
         },
-        "FractionHeatLoadServed": 0,
+        "FractionHeatLoadServed": fraction_floor_area,
     }
 
     return stove_dict
 
 
-def get_space_heater(system_data, model_data):
+def get_space_heater(system_data, fraction_floor_area, model_data):
     rank = obj.get_val(system_data, "@rank")
 
     suppl_heating_capacity = h2k.get_number_field(system_data, "suppl_heating_capacity")
@@ -354,7 +304,7 @@ def get_space_heater(system_data, model_data):
             "Units": "Percent",  # Only unit type allowed here. Note actual value must be a fraction
             "Value": suppl_heating_efficiency,
         },
-        "FractionHeatLoadServed": 0,  # Hardcoded for now
+        "FractionHeatLoadServed": fraction_floor_area,
     }
 
     return space_heater

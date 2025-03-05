@@ -944,6 +944,18 @@
             "hpxml": "HPXML,Building,BuildingDetails,Enclosure,AirInfiltration,extension,HasFlueOrChimneyInConditionedSpace"
         }
     },
+    "suppl_heating_area_heated": {
+        "units": {
+            "unit_type": "area",
+            "h2k_units": "m2",
+            "hpxml_units": "ft2"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "Specifications,LocationHeated,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,extension,FractionHeatLoadServed"
+        }
+    },
     "additional_opening_flue_diameter": {
         "units": {
             "unit_type": "length",

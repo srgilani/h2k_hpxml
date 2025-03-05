@@ -21,7 +21,6 @@ def get_primary_heating_system(h2k_dict, model_data):
     # defaulting this to 0
     model_data.set_building_details({"primary_pilot_light_GJpery": 0})
 
-    print("TYPE1", type1_type)
     if type1_type == "Baseboards":
         # TODO: Remove is_hvac_translated flag after testing
         model_data.set_is_hvac_translated(True)

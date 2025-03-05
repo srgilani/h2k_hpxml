@@ -55,7 +55,16 @@ def get_systems(h2k_dict, model_data):
     # Primary heating system as a component of the HVACPlant Section
     primary_heating_result = get_primary_heating_system(h2k_dict, model_data)
 
-    secondary_heating_systems = get_secondary_heating_systems(h2k_dict, model_data)
+    secondary_heating_systems, remaining_fraction_floor_area = (
+        get_secondary_heating_systems(h2k_dict, model_data)
+    )
+
+    if remaining_fraction_floor_area <= 0:
+        model_data.add_warning_message(
+            {
+                "message": "The calculated area served by the active supplementary heating systems exceeds the total floor area of the home. The model will not be able to simulate in HPXML-OS."
+            }
+        )
 
     # note this doesn't build anything (no HPXML equivalent), just tracks whether there are flues/chimneys
     additional_openings_result = get_additional_openings(h2k_dict, model_data)
@@ -96,6 +105,17 @@ def get_systems(h2k_dict, model_data):
     # We don't really know we have to do this until everything is built
     if heat_pump_backup_type == "separate":
         primary_heating_result.pop("FractionHeatLoadServed", None)
+        heat_pump_result["FractionHeatLoadServed"] = max(
+            0, remaining_fraction_floor_area
+        )
+    elif heat_pump_backup_type == "integrated":
+        heat_pump_result["FractionHeatLoadServed"] = max(
+            0, remaining_fraction_floor_area
+        )
+    else:
+        primary_heating_result["FractionHeatLoadServed"] = max(
+            0, remaining_fraction_floor_area
+        )
 
     hvac_dict = {
         "HVACPlant": {
