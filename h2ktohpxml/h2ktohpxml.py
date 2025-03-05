@@ -195,6 +195,9 @@ def h2ktohpxml(h2k_string="", config={}):
     house_volume = h2k.get_number_field(h2k_dict, "house_volume")
     building_const_dict["ConditionedBuildingVolume"] = house_volume
 
+    # Natural Ventilation
+    # Handled in template (0 days/week)
+
     # ================ 6. HPXML Section: Climate Zones ================
     # /HPXML/Building/BuildingDetails/ClimateandRiskZones/WeatherStation
     weather_dict = hpxml_dict["HPXML"]["Building"]["BuildingDetails"][

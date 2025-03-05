@@ -40,7 +40,7 @@ def get_air_conditioning(h2k_dict, model_data):
 
     if is_cooling_cop:
         # Cooling provided in COP=
-        ac_cooling_seer = (ac_cooling_eff + 1.428) / 0.115
+        ac_cooling_seer = (ac_cooling_eff - 1.428) / 0.115
     else:
         # Cooling provided in SEER
         # TODO: in v11.13, we can use the raw value here because they moved from SEER to EER=

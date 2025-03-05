@@ -95,8 +95,11 @@ def get_basements(h2k_dict, model_data={}):
         wall_core = basement_config[1]  # C (concrete), W (wood)
         slab_ins = basement_config[3]  # "N" None, "A" Above, "B" Below
 
+        # Concrete or wood wall + interior air film
         basement_wall_rval = 0.116 * 5.678 if wall_core == "C" else 0.417 * 5.678
-        pony_wall_rval = 0
+        # basement_wall_rval += 0.12 * 5.678 #Air film
+
+        pony_wall_rval = 0  # (0.12 + 0.03) * 5.678 #Air films
 
         wall_construction = obj.get_val(basement, "Wall,Construction")
         has_pony_wall = obj.get_val(basement, "Wall,@hasPonyWall") == "true"

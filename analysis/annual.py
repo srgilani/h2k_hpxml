@@ -89,16 +89,6 @@ def compare_os_h2k_annual(h2k_results={}, os_results={}):
             "hpxml": os_results.get("Energy Use: Total (MBtu)", 0)
             * (1.0550558526 / 1),  # [MBtu -> GJ]
         },
-        # "total_heating_electricity": {
-        #     "h2k": h2k_results.get("Annual", {})
-        #     .get("Consumption", {})
-        #     .get("Electrical", {})
-        #     .get("@spaceHeating", 0),
-        #     "hpxml": os_results.get(
-        #         "System Use: HeatingSystem1: Electricity: Heating (MBtu)", 0
-        #     )
-        #     * (1.0550558526 / 1),  # [MBtu -> GJ]
-        # },
         "heating_sys_energy_delivered_GJ": {
             "h2k": float(
                 h2k_results.get("Annual", {}).get("Load", {}).get("@auxiliaryEnergy", 0)
@@ -192,8 +182,12 @@ def compare_os_h2k_annual(h2k_results={}, os_results={}):
     )  # [MBtu -> GJ]
 
     # H2k results
+    # This one sometimes shows up as 0 in the h2k
+    # h2k_gross_heat_loss = float(
+    #     h2k_results.get("Annual", {}).get("HeatLoss", {}).get("@total", 0)
+    # )
     h2k_gross_heat_loss = float(
-        h2k_results.get("Annual", {}).get("HeatLoss", {}).get("@total", 0)
+        h2k_results.get("Annual", {}).get("Load", {}).get("@grossHeating", 0)
     )
     h2k_heat_loss_ceiling = float(
         h2k_results.get("Annual", {}).get("HeatLoss", {}).get("@ceiling", 0)
@@ -306,5 +300,212 @@ def compare_os_h2k_annual(h2k_results={}, os_results={}):
         "h2k": h2k_heat_loss_air_leakage,
         "hpxml": os_heat_loss_infiltration + os_heat_loss_nat_ventilation,
     }
+
+    # Fuel use
+    fuel_compare_dict = {
+        "space_heating_elec_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("Electrical", {})
+                .get("@spaceHeating", 0)
+            ),
+            "hpxml": (
+                os_results.get("End Use: Electricity: Heating (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Heating Fans/Pumps (MBtu)", 0)
+                + os_results.get(
+                    "End Use: Electricity: Heating Heat Pump Backup (MBtu)", 0
+                )
+                + os_results.get(
+                    "End Use: Electricity: Heating Heat Pump Backup Fans/Pumps (MBtu)",
+                    0,
+                )
+            )
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "space_heating_ng_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("NaturalGas", {})
+                .get("@spaceHeating", 0)
+            ),
+            "hpxml": (
+                os_results.get("End Use: Natural Gas: Heating (MBtu)", 0)
+                + os_results.get(
+                    "End Use: Natural Gas: Heating Heat Pump Backup (MBtu)", 0
+                )
+            )
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "space_heating_oil_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("Oil", {})
+                .get("@spaceHeating", 0)
+            ),
+            "hpxml": (
+                os_results.get("End Use: Fuel Oil: Heating (MBtu)", 0)
+                + os_results.get(
+                    "End Use: Fuel Oil: Heating Heat Pump Backup (MBtu)", 0
+                )
+            )
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "space_heating_propane_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("Propane", {})
+                .get("@spaceHeating", 0)
+            ),
+            "hpxml": (
+                os_results.get("End Use: Propane: Heating (MBtu)", 0)
+                + os_results.get("End Use: Propane: Heating Heat Pump Backup (MBtu)", 0)
+            )
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "space_heating_wood_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("Wood", {})
+                .get("@spaceHeating", 0)
+            ),
+            "hpxml": (
+                os_results.get("End Use: Wood Cord: Heating (MBtu)", 0)
+                + os_results.get(
+                    "End Use: Wood Cord: Heating Heat Pump Backup (MBtu)", 0
+                )
+                + os_results.get("End Use: Wood Pellets: Heating (MBtu)", 0)
+                + os_results.get(
+                    "End Use: Wood Pellets: Heating Heat Pump Backup (MBtu)", 0
+                )
+            )
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "hot_water_elec_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("Electrical", {})
+                .get("HotWater", {})
+                .get("@dhw", 0)
+            ),
+            "hpxml": (
+                os_results.get("End Use: Electricity: Hot Water (MBtu)", 0)
+                + os_results.get(
+                    "End Use: Electricity: Hot Water Recirc Pump (MBtu)", 0
+                )
+                + os_results.get(
+                    "End Use: Electricity: Hot Water Solar Thermal Pump (MBtu)", 0
+                )
+            )
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "hot_water_ng_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("NaturalGas", {})
+                .get("@hotWater", 0)
+            ),
+            "hpxml": (os_results.get("End Use: Natural Gas: Hot Water (MBtu)", 0))
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "hot_water_oil_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("Oil", {})
+                .get("@hotWater", 0)
+            ),
+            "hpxml": (os_results.get("End Use: Fuel Oil: Hot Water (MBtu)", 0))
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "hot_water_propane_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("Propane", {})
+                .get("@hotWater", 0)
+            ),
+            "hpxml": (os_results.get("End Use: Propane: Hot Water (MBtu)", 0))
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "hot_water_wood_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("Wood", {})
+                .get("@hotWater", 0)
+            ),
+            "hpxml": (
+                os_results.get("End Use: Wood Cord: Hot Water (MBtu)", 0)
+                + os_results.get("End Use: Wood Pellets: Hot Water (MBtu)", 0)
+            )
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "ventilation_elec_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("Electrical", {})
+                .get("@ventilation", 0)
+            ),
+            "hpxml": (
+                os_results.get("End Use: Electricity: Mech Vent (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Mech Vent Preheating (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Mech Vent Precooling (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Whole House Fan (MBtu)", 0)
+            )
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "cooling_elec_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("Electrical", {})
+                .get("@spaceCooling", 0)
+            ),
+            "hpxml": (
+                os_results.get("End Use: Electricity: Cooling (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Cooling Fans/Pumps (MBtu)", 0)
+            )
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+        "baseloads_elec_GJ": {
+            "h2k": float(
+                h2k_results.get("Annual", {})
+                .get("Consumption", {})
+                .get("Electrical", {})
+                .get("@baseload", 0)
+            ),
+            "hpxml": (
+                os_results.get("End Use: Electricity: Lighting Interior (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Lighting Garage (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Lighting Exterior (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Refrigerator (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Freezer (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Dehumidifier (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Dishwasher (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Clothes Washer (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Clothes Dryer (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Range/Oven (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Ceiling Fan (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Television (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Plug Loads (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Well Pump (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Pool Heater (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Pool Pump (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Permanent Spa Heater (MBtu)", 0)
+                + os_results.get("End Use: Electricity: Permanent Spa Pump (MBtu)", 0)
+            )
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
+    }
+
+    compare_dict = {**compare_dict, **fuel_compare_dict}
 
     return flatten(compare_dict)

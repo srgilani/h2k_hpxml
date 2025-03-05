@@ -130,6 +130,9 @@
           <ConditionedFloorArea>2700.0</ConditionedFloorArea>
           <ConditionedBuildingVolume>21600.0</ConditionedBuildingVolume>
         </BuildingConstruction>
+        <extension>
+          <NaturalVentilationAvailabilityDaysperWeek>0</NaturalVentilationAvailabilityDaysperWeek>
+        </extension>
       </BuildingSummary>
       <ClimateandRiskZones>
         <WeatherStation>
