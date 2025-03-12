@@ -121,18 +121,39 @@ def get_single_dhw_system(system_dict, sys_id, model_data):
     if combi_related_hvac_id != None:
         # H2k does not allow a secondary DHW system when a combo is defined
         model_data.set_is_dhw_translated(True)
+        # hpxml_water_heating = {
+        #     "SystemIdentifier": {"@id": sys_id},
+        #     "WaterHeaterType": (
+        #         "space-heating boiler with tankless coil"
+        #         if tank_volume == 0
+        #         else "space-heating boiler with storage tank"
+        #     ),
+        #     "Location": tank_location,
+        #     **({"TankVolume": tank_volume} if tank_volume != 0 else {}),
+        #     "FractionDHWLoadServed": load_fraction,
+        #     "HotWaterTemperature": hot_water_temperature,
+        #     "RelatedHVACSystem": {"@idref": combi_related_hvac_id},
+        # }
+
+        combo_fuel_type = model_data.get_building_detail("combo_fuel_type")
+        combo_energy_factor = model_data.get_building_detail("combo_energy_factor")
+        combo_tank_volume = model_data.get_building_detail("combo_tank_volume")
+
         hpxml_water_heating = {
             "SystemIdentifier": {"@id": sys_id},
+            "FuelType": combo_fuel_type,
             "WaterHeaterType": (
-                "space-heating boiler with tankless coil"
-                if tank_volume == 0
-                else "space-heating boiler with storage tank"
+                "instantaneous water heater"
+                if combo_tank_volume == 0
+                else "storage water heater"
             ),
             "Location": tank_location,
-            **({"TankVolume": tank_volume} if tank_volume != 0 else {}),
+            **({"TankVolume": combo_tank_volume} if combo_tank_volume != 0 else {}),
             "FractionDHWLoadServed": load_fraction,
+            **({"HeatingCapacity": heating_capacity} if heating_capacity > 0 else {}),
+            "EnergyFactor": combo_energy_factor,
             "HotWaterTemperature": hot_water_temperature,
-            "RelatedHVACSystem": {"@idref": combi_related_hvac_id},
+            # "RelatedHVACSystem": {"@idref": combi_related_hvac_id}, #Disabling this as it appears combos aren't interpreted the same
         }
 
     elif tank_type == "storage water heater":

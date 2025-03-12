@@ -686,9 +686,35 @@
         "decimals": 2,
         "default": 2.5
     },
+    "total_daily_hot_water": {
+        "address": {
+            "h2k": "HouseFile,House,BaseLoads,Summary,@hotWaterLoad",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterFixture,extention,WaterFixtureUsageMultiplier"
+        },
+        "units": {
+            "unit_type": "volume",
+            "h2k_units": "L",
+            "hpxml_units": "gal_us"
+        },
+        "decimals": 2,
+        "default": 190
+    },
     "hot_water_tank_volume": {
         "address": {
             "h2k": "TankVolume,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,TankVolume"
+        },
+        "units": {
+            "unit_type": "volume",
+            "h2k_units": "L",
+            "hpxml_units": "gal_us"
+        },
+        "decimals": 1,
+        "default": 50
+    },
+    "combo_tank_volume": {
+        "address": {
+            "h2k": "ComboTankAndPump,TankCapacity,@value",
             "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,TankVolume"
         },
         "units": {
@@ -894,6 +920,18 @@
         "address": {
             "h2k": "@spaceHeatingEfficiency",
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatingSystem,AnnualHeatingEfficiency"
+        }
+    },
+    "p9_water_heating_performance_factor": {
+        "units": {
+            "unit_type": "fraction",
+            "h2k_units": "fraction",
+            "hpxml_units": "fraction"
+        },
+        "decimals": 2,
+        "address": {
+            "h2k": "@waterHeatingPerformanceFactor",
+            "hpxml": "HPXML,Building,BuildingDetails,Systems,WaterHeating,WaterHeatingSystem,EnergyFactor"
         }
     },
     "suppl_heating_pilot_light": {

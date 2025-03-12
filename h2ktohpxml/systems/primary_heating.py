@@ -285,6 +285,31 @@ def get_boiler(type1_data, model_data):
 
     boiler_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
 
+    combo_tank_volume = 0
+    combo_energy_factor = boiler_efficiency / 100  # Fallback
+    if "ComboTankAndPump" in type1_data.keys():
+        combo_tank_volume = h2k.get_number_field(type1_data, "combo_tank_volume")
+
+        combo_default_ef = (
+            type1_data.get("ComboTankAndPump", {})
+            .get("EnergyFactor", {})
+            .get("@useDefaults", "true")
+            == "true"
+        )
+        if combo_default_ef:
+            # warning, the default isn't actually written to the file
+            model_data.add_warning_message(
+                {
+                    "message": "A default combo EF was specified, but HOT2000 does not write this value to the file. A user specified value should be used for better alignment between HOT2000 and HPXML."
+                }
+            )
+        else:
+            combo_energy_factor = float(
+                type1_data.get("ComboTankAndPump", {})
+                .get("EnergyFactor", {})
+                .get("@value", "0")
+            )
+
     model_data.set_building_details(
         {
             "heat_pump_backup_type": "separate",
@@ -295,6 +320,9 @@ def get_boiler(type1_data, model_data):
             "heat_pump_backup_autosized": is_auto_sized,
             "heat_pump_backup_capacity": boiler_capacity,
             "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+            "combo_fuel_type": boiler_fuel_type,
+            "combo_energy_factor": combo_energy_factor,
+            "combo_tank_volume": combo_tank_volume,
         }
     )
 
@@ -508,9 +536,14 @@ def get_p9_heating_system(type1_data, model_data):
     p9_capacity = h2k.get_number_field(type1_data, "p9_heating_capacity")
 
     # Because the hot water section for HPXML combos doesn't accept an efficiency, assuming we have to use the TPF here to capture the overall performance
-    # Pulling in the composite heating efficiency in case we need to swap it in
-    p9_tpf = h2k.get_number_field(type1_data, "p9_tpf")
-    # p9_composite_heating_eff = h2k.get_number_field(type1_data, "p9_composite_heating_eff")
+    # Using the composite space heating efficiency rather than the TPF because we're decoupling hot water and heating
+    # p9_tpf = h2k.get_number_field(type1_data, "p9_tpf")
+    p9_composite_heating_eff = h2k.get_number_field(
+        type1_data, "p9_composite_heating_eff"
+    )
+    p9_water_heating_performance_factor = h2k.get_number_field(
+        type1_data, "p9_water_heating_performance_factor"
+    )
 
     p9_fuel_type = h2k.get_selection_field(type1_data, "p9_fuel_type")
 
@@ -519,11 +552,14 @@ def get_p9_heating_system(type1_data, model_data):
             "heat_pump_backup_type": "separate",
             "heat_pump_backup_system": "boiler",
             "heat_pump_backup_fuel": p9_fuel_type,
-            "heat_pump_backup_efficiency": p9_tpf,
+            "heat_pump_backup_efficiency": p9_composite_heating_eff,
             "heat_pump_backup_eff_unit": "AFUE",
             "heat_pump_backup_autosized": False,
             "heat_pump_backup_capacity": p9_capacity,
             "heat_pump_backup_system_id": model_data.get_system_id("primary_heating"),
+            "combo_fuel_type": p9_fuel_type,
+            "combo_energy_factor": p9_water_heating_performance_factor,
+            "combo_tank_volume": 0,
         }
     )
 
@@ -560,7 +596,7 @@ def get_p9_heating_system(type1_data, model_data):
             "Units": (
                 "AFUE"  # "Percent" if is_steady_state == "true" else "AFUE"
             ),  # "AFUE" / "Percent"
-            "Value": p9_tpf,
+            "Value": p9_composite_heating_eff,
         },
         "FractionHeatLoadServed": 1,
         "ElectricAuxiliaryEnergy": round(

@@ -9,7 +9,7 @@ Outputs: hpxml string
 import xmltodict
 import os
 
-from .utils import h2k, obj, weather
+from .utils import h2k, obj, weather, hot_water_usage
 
 from .enclosure.walls import get_walls, get_attached_walls
 from .enclosure.floors import get_floors
@@ -116,24 +116,25 @@ def h2ktohpxml(h2k_string="", config={}):
 
     # /HPXML/Building/BuildingDetails/BuildingSummary/BuildingOccupancy
     # HPXML's default occupant schedules are not altered at this stage
+    # num_occupants = (
+    #     int(
+    #         obj.get_val(
+    #             h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Adults,@occupants"
+    #         )
+    #     )
+    #     + int(
+    #         obj.get_val(
+    #             h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Children,@occupants"
+    #         )
+    #     )
+    #     + int(
+    #         obj.get_val(
+    #             h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Infants,@occupants"
+    #         )
+    #     )
+    # )
 
-    num_occupants = (
-        int(
-            obj.get_val(
-                h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Adults,@occupants"
-            )
-        )
-        + int(
-            obj.get_val(
-                h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Children,@occupants"
-            )
-        )
-        + int(
-            obj.get_val(
-                h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Infants,@occupants"
-            )
-        )
-    )
+    num_occupants = 3  # SOC Hardcoded
 
     hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["BuildingSummary"][
         "BuildingOccupancy"
@@ -177,6 +178,11 @@ def h2ktohpxml(h2k_string="", config={}):
     # NumberofBedrooms
     num_bedrooms = h2k.get_number_field(h2k_dict, "num_bedrooms")
     building_const_dict["NumberofBedrooms"] = num_bedrooms
+    model_data.set_building_details(
+        {
+            "num_bedrooms": num_bedrooms,
+        }
+    )
 
     # NumberofBathrooms
     num_bathrooms = h2k.get_number_field(h2k_dict, "num_bathrooms")
@@ -323,6 +329,9 @@ def h2ktohpxml(h2k_string="", config={}):
     print("heated floor area", building_const_dict["ConditionedFloorArea"])
 
     # ================ 8. HPXML Section: Systems ================
+    # Run appliances first so we know hot water consumption
+    appliance_result = get_appliances(h2k_dict, model_data)
+
     systems_results = get_systems(h2k_dict, model_data)
     hvac_dict = systems_results["hvac_dict"]
     dhw_dict = systems_results["dhw_dict"]
@@ -330,10 +339,22 @@ def h2ktohpxml(h2k_string="", config={}):
     solar_dhw_dict = systems_results["solar_dhw_dict"]
     generation_dict = systems_results["generation_dict"]
 
+    # Calculate hot water fixture multiplier
+    fixtures_multiplier = hot_water_usage.get_fixtures_multiplier(h2k_dict, model_data)
+
     hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"] = {
         **({"HVAC": hvac_dict} if model_data.get_is_hvac_translated() else {}),
         **({"MechanicalVentilation": mech_vent_dict} if mech_vent_dict != {} else {}),
-        **({"WaterHeating": dhw_dict} if dhw_dict != {} else {}),
+        **(
+            {
+                "WaterHeating": {
+                    **dhw_dict,
+                    "extension": {"WaterFixturesUsageMultiplier": fixtures_multiplier},
+                }
+            }
+            if dhw_dict != {}
+            else {}
+        ),
         **({"SolarThermal": solar_dhw_dict} if solar_dhw_dict != {} else {}),
         **({"Photovoltaics": generation_dict} if generation_dict != {} else {}),
     }
@@ -352,9 +373,7 @@ def h2ktohpxml(h2k_string="", config={}):
     }
 
     # ================ 9. HPXML Section: Appliances ================
-    hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Appliances"] = get_appliances(
-        h2k_dict, model_data
-    )
+    hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Appliances"] = appliance_result
 
     # ================ 10. HPXML Section: Lighting & Ceiling Fans ================
 
