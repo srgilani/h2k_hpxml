@@ -105,6 +105,11 @@ def compare_os_h2k_annual(h2k_results={}, os_results={}):
             "hpxml": os_results.get("Load: Heating: Delivered (MBtu)", 0)
             * (1.0550558526 / 1),  # [MBtu -> GJ]
         },
+        "cooling_sys_energy_delivered_GJ": {
+            "h2k": 0,
+            "hpxml": os_results.get("Load: Cooling: Delivered (MBtu)", 0)
+            * (1.0550558526 / 1),  # [MBtu -> GJ]
+        },
         "peak_heating_load_W": {
             "h2k": float(h2k_results.get("Other", {}).get("@designHeatLossRate", 0)),
             "hpxml": os_results.get("HVAC Design Load: Heating: Total (Btu/h)", 0)
