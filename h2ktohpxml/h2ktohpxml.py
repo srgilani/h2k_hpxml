@@ -35,7 +35,7 @@ def h2ktohpxml(h2k_string="", config={}):
     )  # To add a test adiabatic wall to check impact on loads
 
     translation_mode = config.get("translation_mode", "SOC")
-    print("TRANSLATION MODE", translation_mode)
+    print("Translation Mode: \t\t", translation_mode)
     # ================ 1. Load template HPXML file ================
     base_hpxml_path = os.path.join(os.path.dirname(__file__), "templates", "base.xml")
     with open(base_hpxml_path, "r", encoding="utf-8") as f:
@@ -156,7 +156,7 @@ def h2ktohpxml(h2k_string="", config={}):
 
     # ResidentialFacilityType
     res_facility_type = h2k.get_selection_field(h2k_dict, "res_facility_type")
-    print("res_facility_type", res_facility_type)
+    print("Residential Facility Type: \t", res_facility_type)
     model_data.set_building_details({"res_facility_type": res_facility_type})
     building_const_dict["ResidentialFacilityType"] = res_facility_type
 
@@ -239,10 +239,11 @@ def h2ktohpxml(h2k_string="", config={}):
         )
 
     print(
-        obj.get_val(h2k_dict, "HouseFile,ProgramInformation,Weather,Location,English")
+        "HOT2000 Weather Location: \t",
+        obj.get_val(h2k_dict, "HouseFile,ProgramInformation,Weather,Location,English"),
     )
 
-    print(weather_file)
+    # print(weather_file)
 
     weather_dict["Name"] = weather_file
     weather_dict["extension"]["EPWFilePath"] = f"{weather_file}.epw"
@@ -349,7 +350,7 @@ def h2ktohpxml(h2k_string="", config={}):
         ag_heated_floor_area + bg_heated_floor_area
     )
 
-    print("heated floor area", building_const_dict["ConditionedFloorArea"])
+    print("Heated Floor Area (ft2): \t", building_const_dict["ConditionedFloorArea"])
 
     # ================ 8. HPXML Section: Systems ================
     # Run appliances first so we know hot water consumption

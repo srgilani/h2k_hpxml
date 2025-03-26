@@ -17,7 +17,6 @@ def get_ceilings(h2k_dict, model_data={}):
     )
 
     has_roof_cavity_inputs = roof_cavity_inputs != {}
-    print("has_roof_cavity_inputs", has_roof_cavity_inputs)
 
     if "Ceiling" not in components.keys():
         h2k_ceilings = []

@@ -21,7 +21,7 @@ except:
 
 
 # print(config.get("nonh2k", "operable_window_avail_days"))
-print("translation_mode", translation_mode)
+
 # if __name__ == "__main__":
 #     print("name is main")
 #     try:
@@ -35,19 +35,19 @@ print("translation_mode", translation_mode)
 if ".h2k" in source_h2k_path.lower():
     # Single file
     # convert to array for consistent processing
-    print("single file")
+    # print("single file")
     h2k_files = [source_h2k_path]
 else:
     # Folder
     # List folder and append to source path
-    print("folder")
+    # print("folder")
     h2k_files = [f"{source_h2k_path}/{x}" for x in os.listdir(source_h2k_path)]
 
-print("h2k_files", h2k_files)
+print("H2k Files:", h2k_files)
 
 for filepath in h2k_files:
     print("================================================")
-    print("filepath", filepath)
+    print("File Path: ", filepath)
 
     with open(filepath, "r", encoding="utf-8") as f:
         h2k_string = f.read()
