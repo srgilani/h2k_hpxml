@@ -58,6 +58,14 @@ def read_h2k_results(path="", case="Base", operating_conditions="SOC"):
         .get("English", {})
     )
 
+    hot_water_load_Lperday = float(
+        h2k_dict.get("HouseFile", {})
+        .get("House", {})
+        .get("BaseLoads", {})
+        .get("Summary", {})
+        .get("@hotWaterLoad", {})
+    )
+
     all_results = h2k_dict.get("HouseFile", {}).get("AllResults", {}).get("Results", [])
 
     if not all_results:
@@ -77,7 +85,7 @@ def read_h2k_results(path="", case="Base", operating_conditions="SOC"):
         if case_match and op_cond_match:
             matching_res_set = res_set
 
-    return matching_res_set, weather_location
+    return matching_res_set, weather_location, hot_water_load_Lperday
 
 
 def compare_os_h2k_annual(h2k_results={}, os_results={}):
@@ -301,6 +309,18 @@ def compare_os_h2k_annual(h2k_results={}, os_results={}):
         "hpxml": os_heat_loss_infiltration + os_heat_loss_nat_ventilation,
     }
 
+    compare_dict["hot_water_usage_Lperday"] = {
+        "h2k": -1,
+        "hpxml": (
+            os_results.get("Hot Water: Clothes Washer (gal)", 0)
+            + os_results.get("Hot Water: Dishwasher (gal)", 0)
+            + os_results.get("Hot Water: Fixtures (gal)", 0)
+            + os_results.get("Hot Water: Distribution Waste (gal)", 0)
+        )
+        * 3.78541
+        / 365,
+    }
+
     # Fuel use
     fuel_compare_dict = {
         "space_heating_elec_GJ": {
@@ -509,3 +529,13 @@ def compare_os_h2k_annual(h2k_results={}, os_results={}):
     compare_dict = {**compare_dict, **fuel_compare_dict}
 
     return flatten(compare_dict)
+
+
+def get_ashrae_140_results(os_results={}):
+
+    # Heating Load
+    heating_load = os_results.get("Load: Heating: Delivered (MBtu)", 0)
+    # Cooling Load
+    cooling_load = os_results.get("Load: Cooling: Delivered (MBtu)", 0)
+
+    return {"HeatingLoadMBtu": heating_load, "CoolingLoadMBtu": cooling_load}

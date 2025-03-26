@@ -22,6 +22,7 @@ from .baseloads.appliances import get_appliances
 from .baseloads.lighting import get_lighting
 from .baseloads.miscloads import get_plug_loads
 from .systems.systems import get_systems
+from .program_mode.ashrae140 import apply_ashrae_140
 
 from . import Model
 
@@ -33,6 +34,8 @@ def h2ktohpxml(h2k_string="", config={}):
         "add_test_wall", False
     )  # To add a test adiabatic wall to check impact on loads
 
+    translation_mode = config.get("translation_mode", "SOC")
+    print("TRANSLATION MODE", translation_mode)
     # ================ 1. Load template HPXML file ================
     base_hpxml_path = os.path.join(os.path.dirname(__file__), "templates", "base.xml")
     with open(base_hpxml_path, "r", encoding="utf-8") as f:
@@ -210,19 +213,39 @@ def h2ktohpxml(h2k_string="", config={}):
         "ClimateandRiskZones"
     ]["WeatherStation"]
 
-    cwec_file = weather.get_cwec_file(
-        obj.get_val(h2k_dict, "HouseFile,ProgramInformation,Weather,Region,English"),
-        obj.get_val(h2k_dict, "HouseFile,ProgramInformation,Weather,Location,English"),
-    )
+    # Get the weather file
+    if translation_mode == "ASHRAE140":
+        # Selects one of the two ashrae140 weather files:
+        # USA_CO_Colorado.Springs-Peterson.Field.724660_TMY3
+        # USA_NV_Las.Vegas-McCarran.Intl.AP.723860_TMY3
+        weather_location = obj.get_val(
+            h2k_dict, "HouseFile,ProgramInformation,Weather,Location,English"
+        )
+
+        if weather_location == "Lasvega":
+            weather_file = "USA_NV_Las.Vegas-McCarran.Intl.AP.723860_TMY3"
+        else:
+            weather_file = "USA_CO_Colorado.Springs-Peterson.Field.724660_TMY3"
+
+    else:
+        # Grabs the CWEC weather file
+        weather_file = weather.get_cwec_file(
+            obj.get_val(
+                h2k_dict, "HouseFile,ProgramInformation,Weather,Region,English"
+            ),
+            obj.get_val(
+                h2k_dict, "HouseFile,ProgramInformation,Weather,Location,English"
+            ),
+        )
 
     print(
         obj.get_val(h2k_dict, "HouseFile,ProgramInformation,Weather,Location,English")
     )
 
-    print(cwec_file)
+    print(weather_file)
 
-    weather_dict["Name"] = cwec_file
-    weather_dict["extension"]["EPWFilePath"] = f"{cwec_file}.epw"
+    weather_dict["Name"] = weather_file
+    weather_dict["extension"]["EPWFilePath"] = f"{weather_file}.epw"
 
     # ================ 7. HPXML Section: Enclosure ================
     walls = []
@@ -388,6 +411,10 @@ def h2ktohpxml(h2k_string="", config={}):
     hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["MiscLoads"] = get_plug_loads(
         h2k_dict, model_data
     )
+
+    # ================ Apply overall translation mode specifications ================
+    if translation_mode == "ASHRAE140":
+        hpxml_dict = apply_ashrae_140(hpxml_dict, h2k_dict, model_data)
 
     # Done!
     return xmltodict.unparse(

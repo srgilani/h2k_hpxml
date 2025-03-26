@@ -36,6 +36,8 @@ def get_fixtures_multiplier(h2k_dict, model_data):
 
     fixture_usgpd = calc_fixture_hot_water(num_occupants, frac_low_flow_fixtures)
     waste_usgpd = calc_distribution_waste(num_occupants, frac_low_flow_fixtures)
+    # print("fixture_usgpd", fixture_usgpd)
+    # print("waste_usgpd", waste_usgpd)
 
     # Multiplying the gpd values by a calibration equation
     # Even though our fixture and waste gpd values match those calculated in the HPXML-OS workflow, these values appear to be "design" values, and aren't necessarily what the simulation experiences

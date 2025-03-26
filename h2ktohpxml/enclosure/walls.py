@@ -75,7 +75,7 @@ def get_walls(h2k_dict, model_data={}):
             },  # for now, always gypsum board, note default thickness is 0.5"
             "Insulation": {
                 "SystemIdentifier": {"@id": f"{wall_id}Insulation"},
-                "AssemblyEffectiveRValue": wall_rval,
+                "AssemblyEffectiveRValue": round(wall_rval, 2),
             },
             "extension": {"H2kLabel": f"{wall_label}"},
         }
@@ -194,7 +194,7 @@ def get_attached_walls(h2k_dict, model_data={}, add_test_wall=False):
             },  # for now, always gypsum board, note default thickness is 0.5"
             "Insulation": {
                 "SystemIdentifier": {"@id": f"{wall_id}Insulation"},
-                "AssemblyEffectiveRValue": wall_common_rval,
+                "AssemblyEffectiveRValue": round(wall_common_rval, 2),
             },
             "extension": {"H2kLabel": "No H2k Component - Attached Wall"},
         }
@@ -270,7 +270,7 @@ def get_attached_walls(h2k_dict, model_data={}, add_test_wall=False):
             },  # for now, always gypsum board, note default thickness is 0.5"
             "Insulation": {
                 "SystemIdentifier": {"@id": f"{wall_id}Insulation"},
-                "AssemblyEffectiveRValue": wall_common_rval,
+                "AssemblyEffectiveRValue": round(wall_common_rval, 2),
             },
             "extension": {"H2kLabel": "No H2k Component - Attached Wall"},
         }

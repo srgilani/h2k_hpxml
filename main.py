@@ -3,7 +3,7 @@ import sys
 import configparser
 from h2ktohpxml import h2ktohpxml
 
-print("Hello from main.py")
+# print("Hello from main.py")
 
 config = configparser.ConfigParser()
 config.read("conversionconfig.ini")
@@ -12,8 +12,16 @@ config.read("conversionconfig.ini")
 source_h2k_path = config.get("paths", "source_h2k_path")
 hpxml_os_path = config.get("paths", "hpxml_os_path")
 dest_hpxml_path = config.get("paths", "dest_hpxml_path")
-# print(config.get("nonh2k", "operable_window_avail_days"))
 
+
+try:
+    translation_mode = config.get("translation", "mode")
+except:
+    translation_mode = "SOC"
+
+
+# print(config.get("nonh2k", "operable_window_avail_days"))
+print("translation_mode", translation_mode)
 # if __name__ == "__main__":
 #     print("name is main")
 #     try:
@@ -40,10 +48,11 @@ print("h2k_files", h2k_files)
 for filepath in h2k_files:
     print("================================================")
     print("filepath", filepath)
+
     with open(filepath, "r", encoding="utf-8") as f:
         h2k_string = f.read()
 
-    hpxml_string = h2ktohpxml(h2k_string)
+    hpxml_string = h2ktohpxml(h2k_string, {"translation_mode": translation_mode})
 
     # with open(f"./tests/files/{filepath.split("/")[-1].replace(".h2k",".xml")}", "w") as f:
 

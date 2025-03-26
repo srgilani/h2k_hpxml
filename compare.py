@@ -24,6 +24,12 @@ except (NoOptionError, NoSectionError):
 print("flags", flags)
 
 
+try:
+    translation_mode = config.get("translation", "mode")
+except:
+    translation_mode = "SOC"
+
+
 # Determine whether to process as folder or single file
 if ".h2k" in source_h2k_path.lower():
     # Single file
@@ -60,19 +66,23 @@ def run_hpxml_os(file="", path=""):
         return {"result": result, "success": success, "path_to_log": path_to_log}
 
 
-print("h2k_files", h2k_files)
 compare_dict_out = {}
+
+ashrae140_csv_string = ""
+
 for filepath in h2k_files:
     print("filepath", filepath)
     h2k_filename = filepath.split("/")[-1]
-    hpxml_filename = h2k_filename.replace(".h2k", ".xml").replace(".H2K", ".xml")
+    hpxml_filename = (
+        h2k_filename.replace(".h2k", ".xml").replace(".H2K", ".xml").replace(" ", "-")
+    )
     print(h2k_filename)
 
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             h2k_string = f.read()
 
-        hpxml_string = h2ktohpxml(h2k_string)
+        hpxml_string = h2ktohpxml(h2k_string, {"translation_mode": translation_mode})
 
         with open(
             f"{hpxml_os_path}/{dest_hpxml_path}/{hpxml_filename}", "w", encoding="utf-8"
@@ -86,7 +96,9 @@ for filepath in h2k_files:
             f"{hpxml_os_path}{dest_hpxml_path}", return_type="dict"
         )
 
-        if os_results.get("Energy Use: Total (MBtu)", 0) == 0:
+        if (os_results.get("Energy Use: Total (MBtu)", 0) == 0) & (
+            translation_mode != "ASHRAE140"
+        ):
             # no results generated, check logs
             with open(
                 f"{hpxml_os_path}{dest_hpxml_path}run/run.log", "r", encoding="utf-8"
@@ -96,10 +108,34 @@ for filepath in h2k_files:
             compare_dict_out[h2k_filename] = logs_string
             continue
 
-        h2k_results, weather_location = annual.read_h2k_results(filepath)
+        if translation_mode == "ASHRAE140":
+            h2k_results = {}
+            weather_location = "unknown"
+            hot_water_load_Lperday = 0
+
+            ashrae_140_results = annual.get_ashrae_140_results(os_results)
+
+            print("ashrae_140_results", ashrae_140_results)
+
+            [_, testname, heatingCooling] = h2k_filename.split(" ")
+
+            new_line = [
+                f"{testname}{heatingCooling[0]}",
+                str(ashrae_140_results["HeatingLoadMBtu"]),
+                str(ashrae_140_results["CoolingLoadMBtu"]),
+            ]
+
+            # print(",".join(new_line))
+            ashrae140_csv_string = ashrae140_csv_string + ",".join(new_line) + ",\n"
+
+        else:
+            h2k_results, weather_location, hot_water_load_Lperday = (
+                annual.read_h2k_results(filepath)
+            )
 
         compare_dict = annual.compare_os_h2k_annual(h2k_results, os_results)
         compare_dict["location"] = weather_location
+        compare_dict["hot_water_usage_Lperday_h2k"] = hot_water_load_Lperday
 
         compare_dict_out[h2k_filename] = compare_dict
 
@@ -107,7 +143,7 @@ for filepath in h2k_files:
         compare_dict_out[h2k_filename] = {"error": f"{error}"}
 
 print("DONE")
-# print(compare_dict_out)
+# print(ashrae140_csv_string)
 
 
 with open(f"{dest_compare_data}/systems_compare_data.json", "w") as f:

@@ -45,7 +45,7 @@ def get_windows(h2k_windows, parent_type, model_data):
 
             window_orientation = h2k.get_selection_field(window, "window_direction")
 
-            has_overhang = window_header_height != 0 or window_overhang_width != 0
+            has_overhang = window_header_height != 0 and window_overhang_width != 0
 
             if window_header_height < 0:
                 model_data.add_warning_message(
@@ -63,8 +63,8 @@ def get_windows(h2k_windows, parent_type, model_data):
                 "SystemIdentifier": {"@id": window_id},
                 "Area": window_area,
                 "Azimuth": window_orientation,
-                "UFactor": window_uval,
-                "SHGC": window_shgc,
+                "UFactor": round(window_uval, 4),
+                "SHGC": round(window_shgc, 2),
                 "InteriorShading": {
                     "SystemIdentifier": {"@id": f"{window_id}InteriorShading"},
                     "SummerShadingCoefficient": "1",
