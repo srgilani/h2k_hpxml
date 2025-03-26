@@ -9,7 +9,10 @@ def get_appliances(h2k_dict, model_data={}):
     # 687 kWh/y for a house (SOC)
     # 458 kWh/y for a murb (SOC)
     # TODO: find appropriate CombinedEnergyFactor to achieve above
-    dryer_exhaust = h2k.get_number_field(h2k_dict, "dryer_exhaust_flowrate")
+    try:
+        dryer_exhaust = h2k.get_number_field(h2k_dict, "dryer_exhaust_flowrate")
+    except:
+        dryer_exhaust = 0
 
     # Range targets:
     # 565 kWh/y for a all (SOC)

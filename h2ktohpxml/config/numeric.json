@@ -343,6 +343,54 @@
             "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Floors,Floor,Insulation,AssemblyEffectiveRValue"
         }
     },
+    "sloped_roof_sheathing_r_value": {
+        "units": {
+            "unit_type": "thermal_resistance",
+            "h2k_units": "RSI",
+            "hpxml_units": "R"
+        },
+        "decimals": 4,
+        "address": {
+            "h2k": "SlopedRoof,SheatingMaterial,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Roofs,Roof,Insulation,AssemblyEffectiveRValue"
+        }
+    },
+    "sloped_roof_material_r_value": {
+        "units": {
+            "unit_type": "thermal_resistance",
+            "h2k_units": "RSI",
+            "hpxml_units": "R"
+        },
+        "decimals": 4,
+        "address": {
+            "h2k": "SlopedRoof,RoofingMaterial,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Roofs,Roof,Insulation,AssemblyEffectiveRValue"
+        }
+    },
+    "gable_ends_sheathing_r_value": {
+        "units": {
+            "unit_type": "thermal_resistance",
+            "h2k_units": "RSI",
+            "hpxml_units": "R"
+        },
+        "decimals": 4,
+        "address": {
+            "h2k": "GableEnds,SheatingMaterial,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Walls,Wall,Insulation,AssemblyEffectiveRValue"
+        }
+    },
+    "gable_ends_exterior_r_value": {
+        "units": {
+            "unit_type": "thermal_resistance",
+            "h2k_units": "RSI",
+            "hpxml_units": "R"
+        },
+        "decimals": 4,
+        "address": {
+            "h2k": "GableEnds,ExteriorMaterial,@value",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,Walls,Wall,Insulation,AssemblyEffectiveRValue"
+        }
+    },
     "foundation_floor_area": {
         "units": {
             "unit_type": "area",
@@ -613,7 +661,7 @@
         },
         "decimals": 2,
         "address": {
-            "h2k": "Specifications,OutputCapacity,@value",
+            "h2k": "Specifications,RatedCapacity,@value",
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,CoolingSystem,HeatingCapacity"
         }
     },
@@ -1076,6 +1124,13 @@
         "address": {
             "h2k": "OperationSchedule,@value",
             "hpxml": "HPXML,Building,BuildingDetails,Systems,MechanicalVentilation,VentilationFans,VentilationFan,HoursInOperation"
+        }
+    },
+    "ventilation_requirement_achnat": {
+        "decimals": 4,
+        "address": {
+            "h2k": "HouseFile,House,Ventilation,Requirements,@ach",
+            "hpxml": "HPXML,Building,BuildingDetails,Enclosure,AirInfiltration,AirInfiltrationMeasurement,BuildingAirLeakage,AirLeakage"
         }
     },
     "pv_inverter_efficiency": {

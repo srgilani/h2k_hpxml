@@ -24,7 +24,7 @@ def get_air_conditioning(h2k_dict, model_data):
     ac_cooling_eff = h2k.get_number_field(type2_data, "ac_cooling_efficiency")
     ac_capacity = h2k.get_number_field(type2_data, "ac_capacity")
     is_auto_sized = (
-        "Calculated" == obj.get_val(type2_data, "Specifications,OutputCapacity,English")
+        "Calculated" == obj.get_val(type2_data, "Specifications,RatedCapacity,English")
         or ac_capacity == 0
     )
 
@@ -47,6 +47,7 @@ def get_air_conditioning(h2k_dict, model_data):
         ac_cooling_seer = ac_cooling_eff
 
     ac_dict = {}
+
     if type2_type == "AirConditioning":
         ac_dict = {
             "SystemIdentifier": {"@id": model_data.get_system_id("air_conditioning")},

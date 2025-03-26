@@ -286,7 +286,7 @@ def get_boiler(type1_data, model_data):
     boiler_fuel_type = h2k.get_selection_field(type1_data, "furnace_fuel_type")
 
     combo_tank_volume = 0
-    combo_energy_factor = boiler_efficiency / 100  # Fallback
+    combo_energy_factor = boiler_efficiency  # Fallback, already a fraction
     if "ComboTankAndPump" in type1_data.keys():
         combo_tank_volume = h2k.get_number_field(type1_data, "combo_tank_volume")
 

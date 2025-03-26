@@ -505,7 +505,7 @@
     },
     "heat_pump_switchover_type": {
         "address": {
-            "h2k": "Temperature,CutoffType,@value",
+            "h2k": "Temperature,CutoffType,English",
             "hpxml": "HPXML,Building,BuildingDetails,Systems,HVAC,HVACPlant,HeatPump,BackupHeatingSwitchoverTemperature"
         },
         "map": {

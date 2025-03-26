@@ -94,6 +94,11 @@ def get_heat_pump(h2k_dict, model_data):
         switchover_temp = h2k.get_number_field(type2_data, "heat_pump_switchover_temp")
     elif switchover_type == "unrestricted":
         switchover_temp = -40  # -40C, placeholder value to prevent switchover
+        model_data.add_warning_message(
+            {
+                "message": "An unrestricted cutoff was specified for an ASHP system. Review this setting before proceeding as it reflects an unrealistic system configuration."
+            }
+        )
     elif switchover_type == "balance":
         # Use default behaviour depending on different heat pump types (until comparison testing between the two engines)
         pass
@@ -118,11 +123,9 @@ def get_heat_pump(h2k_dict, model_data):
         # If neither CompressorLockoutTemperature nor BackupHeatingSwitchoverTemperature provided,
         # CompressorLockoutTemperature defaults to 25F if fossil fuel backup otherwise 0F.
 
-        # air_heat_pump_equip_type = h2k.get_selection_field(
-        #     type2_data, "air_heat_pump_equip_type"
-        # )
-
-        air_heat_pump_equip_type = "air-to-air"
+        air_heat_pump_equip_type = h2k.get_selection_field(
+            type2_data, "air_heat_pump_equip_type"
+        )
 
         if air_heat_pump_equip_type == "mini-split":
             # Defaults for determining low-temp heat pump capacity:
@@ -137,85 +140,6 @@ def get_heat_pump(h2k_dict, model_data):
             heat_pump_dict = {
                 "SystemIdentifier": {"@id": model_data.get_system_id("heat_pump")},
                 "HeatPumpType": "mini-split",
-                "HeatPumpFuel": "electricity",
-                **({} if is_auto_sized else {"HeatingCapacity": hp_capacity}),
-                # "HeatingCapacity17F": None, #could be included here if we had the info
-                **({} if is_auto_sized else {"CoolingCapacity": hp_capacity}),
-                # "CompressorType": "single stage", #Using HPXML's built-in defaulting at the moment
-                # defaults to “single stage” if SEER <= 15, else “two stage” if SEER <= 21, else “variable speed”.
-                "CoolingSensibleHeatFraction": cooling_sensible_heat_fraction,
-                **(
-                    {
-                        "BackupType": "separate",
-                        "BackupSystem": {"@idref": heat_pump_backup_system_id},
-                        **(
-                            {}
-                            if switchover_type == "balance"
-                            else {"BackupHeatingSwitchoverTemperature": switchover_temp}
-                        ),
-                    }
-                    if heat_pump_backup_type == "separate"
-                    else {}
-                ),
-                **(
-                    {
-                        "BackupType": "integrated",
-                        "BackupSystemFuel": heat_pump_backup_fuel,
-                        "BackupAnnualHeatingEfficiency": {
-                            "Units": heat_pump_backup_eff_unit,
-                            "Value": heat_pump_backup_efficiency,
-                        },
-                        **(
-                            {}
-                            if heat_pump_backup_autosized
-                            else {"BackupHeatingCapacity": heat_pump_backup_capacity}
-                        ),
-                        **(
-                            {}
-                            if switchover_type == "balance"
-                            else {"BackupHeatingSwitchoverTemperature": switchover_temp}
-                        ),
-                    }
-                    if heat_pump_backup_type == "integrated"
-                    else {}
-                ),
-                "FractionHeatLoadServed": 1,
-                "FractionCoolLoadServed": 1,
-                "AnnualCoolingEfficiency": {
-                    "Units": "SEER",  # only option
-                    "Value": round(hp_cooling_seer, 2),
-                },
-                "AnnualHeatingEfficiency": {
-                    "Units": "HSPF",  # only option
-                    "Value": round(hp_heating_hspf, 2),
-                },
-                "extension": {
-                    "HeatingCapacityRetention": {
-                        "Fraction": 0.563635566,
-                        "Temperature": 17,
-                    },  # Based on h2k HP curve
-                    **(
-                        {
-                            "HeatingAutosizingFactor": 1,
-                            "CoolingAutosizingFactor": 1,
-                        }
-                        if is_auto_sized
-                        else {}
-                    ),
-                },
-            }
-
-        elif air_heat_pump_equip_type == "packaged terminal heat pump":
-            # Defaults for determining low-temp heat pump capacity: Same as mini split based on code
-            heat_pump_backup_type = "separate"
-            model_data.set_building_details(
-                {
-                    "heat_pump_backup_type": "separate",
-                }
-            )
-            heat_pump_dict = {
-                "SystemIdentifier": {"@id": model_data.get_system_id("heat_pump")},
-                "HeatPumpType": "packaged terminal heat pump",
                 "HeatPumpFuel": "electricity",
                 **({} if is_auto_sized else {"HeatingCapacity": hp_capacity}),
                 # "HeatingCapacity17F": None, #could be included here if we had the info
@@ -301,7 +225,7 @@ def get_heat_pump(h2k_dict, model_data):
                 **({} if is_auto_sized else {"HeatingCapacity": hp_capacity}),
                 # "HeatingCapacity17F": None, #could be included here if we had the info
                 **({} if is_auto_sized else {"CoolingCapacity": hp_capacity}),
-                "CompressorType": "variable speed",  # Using HPXML's built-in defaulting at the moment
+                # "CompressorType": "variable speed",  # Using HPXML's built-in defaulting at the moment
                 # defaults to “single stage” if SEER <= 15, else “two stage” if SEER <= 21, else “variable speed”.
                 "CoolingSensibleHeatFraction": (
                     cooling_sensible_heat_fraction if heating_and_cooling else 0.76

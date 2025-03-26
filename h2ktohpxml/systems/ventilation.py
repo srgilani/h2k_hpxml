@@ -74,6 +74,10 @@ def get_ventilator(sys_data, ind, vent_hours_per_day, is_whole_house, model_data
     fan_power = h2k.get_number_field(sys_data, "ventilator_fan_power")
     supply_flow_rate = h2k.get_number_field(sys_data, "ventilator_supply_flowrate")
     exhaust_flow_rate = h2k.get_number_field(sys_data, "ventilator_exhaust_flowrate")
+
+    if (supply_flow_rate == 0) & (exhaust_flow_rate == 0):
+        return {}
+
     supplemental_vent_hours_per_day = h2k.get_number_field(
         sys_data, "supplemental_vent_schedule"
     )
