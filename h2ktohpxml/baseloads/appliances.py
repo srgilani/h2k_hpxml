@@ -9,7 +9,10 @@ def get_appliances(h2k_dict, model_data={}):
     # 687 kWh/y for a house (SOC)
     # 458 kWh/y for a murb (SOC)
     # TODO: find appropriate CombinedEnergyFactor to achieve above
-    dryer_exhaust = h2k.get_number_field(h2k_dict, "dryer_exhaust_flowrate")
+    try:
+        dryer_exhaust = h2k.get_number_field(h2k_dict, "dryer_exhaust_flowrate")
+    except:
+        dryer_exhaust = 0
 
     # Range targets:
     # 565 kWh/y for a all (SOC)
@@ -22,14 +25,14 @@ def get_appliances(h2k_dict, model_data={}):
         cw_elec_rate,
         cw_gas_rate,
         cw_imef,
-    ) = calc_required_clothes_washer_specs(building_type, num_occupants)
+    ) = calc_required_clothes_washer_specs(building_type, num_occupants, model_data)
 
     (
         dw_label_energy_rating,
         dw_label_cycles_year,
         dw_capacity,
         dw_ghwc,
-    ) = calc_required_dishwasher_specs(building_type, num_occupants)
+    ) = calc_required_dishwasher_specs(building_type, num_occupants, model_data)
 
     dryer_combined_energy_factor = calc_required_dryer_specs(
         building_type,
@@ -101,7 +104,11 @@ def get_adjusted_num_bedrooms(building_type, num_occupants):
         return -0.68 + 1.09 * num_occupants
 
 
-def calc_required_clothes_washer_specs(building_type, num_occupants):
+# This function is used to calculate the actual usgpd that HPXML will calculate based on the specs given
+# IF/When calculations here are generalized to properly differentiate between operating conditions, number of occupants, etc, this calculation may not be needed
+
+
+def calc_required_clothes_washer_specs(building_type, num_occupants, model_data):
     # Calculates the required clothes washer specs based on the model used in the HPXML workflow
     # Goal is to have HPXML produce the same kWh/day and gal/day as H2k
     # model: https://www.resnet.us/wp-content/uploads/ANSI_RESNET_ICC-301-2019-Addendum-A-2019_7.16.20-1.pdf
@@ -145,6 +152,22 @@ def calc_required_clothes_washer_specs(building_type, num_occupants):
         / (energy_target * (2.08 * washer_capacity + 1.59))
     )
 
+    actual_clothes_washer_gpd = calc_actual_clothes_washer_usgpd(
+        num_occupants,
+        label_cycles_year / 52,
+        ghwc,
+        gas_rate,
+        elec_rate,
+        washer_capacity,
+        label_energy_rating,
+    )
+
+    model_data.set_building_details(
+        {
+            "clothes_washer_usgpd": actual_clothes_washer_gpd,
+        }
+    )
+
     return (
         label_energy_rating,
         label_cycles_year,
@@ -156,7 +179,40 @@ def calc_required_clothes_washer_specs(building_type, num_occupants):
     )
 
 
-def calc_required_dishwasher_specs(building_type, num_occupants):
+def calc_actual_clothes_washer_usgpd(
+    num_occupants,
+    label_usage,
+    label_annual_gas_cost,
+    label_gas_rate,
+    label_electric_rate,
+    capacity,
+    rated_annual_kwh,
+):
+    gas_h20 = 0.3914  # (gal/cyc) per (therm/y)
+    elec_h20 = 0.0178  # (gal/cyc) per (kWh/y)
+    lcy = label_usage * 52.0  # label cycles per year
+
+    # Note that num_bedrooms is used in an asset based calculation instead of num_occupants
+    scy = (
+        123.0 + 61.0 * num_occupants
+    )  # Eq. 1 from http://www.fsec.ucf.edu/en/publications/pdf/fsec-pf-464-15.pdf
+
+    acy = scy * (
+        (3.0 * 2.08 + 1.59) / (capacity * 2.08 + 1.59)
+    )  # Annual Cycles per Year
+    cw_appl = (
+        label_annual_gas_cost * gas_h20 / label_gas_rate
+        - (rated_annual_kwh * label_electric_rate) * elec_h20 / label_electric_rate
+    ) / (label_electric_rate * gas_h20 / label_gas_rate - elec_h20)
+
+    annual_kwh = cw_appl / lcy * acy
+
+    gpd = (rated_annual_kwh - cw_appl) * elec_h20 * acy / 365.0
+
+    return gpd
+
+
+def calc_required_dishwasher_specs(building_type, num_occupants, model_data):
     # Calculates the required diswasher specs based on the model used in the HPXML workflow
     # Goal is to have HPXML produce the same kWh/day and gal/day as H2k
     # model: https://www.resnet.us/wp-content/uploads/ANSI_RESNET_ICC-301-2019-Addendum-A-2019_7.16.20-1.pdf
@@ -190,7 +246,54 @@ def calc_required_dishwasher_specs(building_type, num_occupants):
         actual_cycles_year / energy_target
     )
 
+    actual_dishwasher_usgpd = calc_actual_dishwasher_usgpd(
+        num_occupants,
+        label_cycles_year / 52,
+        ghwc,
+        1.09,  # Default from above
+        label_energy_rating,
+        0.12,  # Default from above
+        dishwasher_capacity,
+    )
+
+    model_data.set_building_details(
+        {
+            "dishwasher_usgpd": actual_dishwasher_usgpd,
+        }
+    )
+
     return label_energy_rating, label_cycles_year, dishwasher_capacity, ghwc
+
+
+def calc_actual_dishwasher_usgpd(
+    num_occupants,
+    label_usage,
+    label_annual_gas_cost,
+    label_gas_rate,
+    rated_annual_kwh,
+    label_electric_rate,
+    place_setting_capacity,
+):
+
+    lcy = label_usage * 52.0
+    kwh_per_cyc = (
+        (
+            label_annual_gas_cost * 0.5497 / label_gas_rate
+            - rated_annual_kwh * label_electric_rate * 0.02504 / label_electric_rate
+        )
+        / (label_electric_rate * 0.5497 / label_gas_rate - 0.02504)
+    ) / lcy
+
+    scy = (
+        91.0 + 30.0 * num_occupants
+    )  # Eq. 3 from http://www.fsec.ucf.edu/en/publications/pdf/fsec-pf-464-15.pdf
+
+    dwcpy = scy * (12.0 / place_setting_capacity)
+    annual_kwh = kwh_per_cyc * dwcpy
+
+    gpd = (rated_annual_kwh - kwh_per_cyc * lcy) * 0.02504 * dwcpy / 365.0
+
+    return gpd
 
 
 def calc_required_dryer_specs(

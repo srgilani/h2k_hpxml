@@ -55,7 +55,7 @@ def get_rim_joists(h2k_floor_headers, parent_type, model_data):
             "Area": rim_joist_area,
             "Insulation": {
                 "SystemIdentifier": {"@id": f"{rim_joist_id}Insulation"},
-                "AssemblyEffectiveRValue": rim_joist_rval,
+                "AssemblyEffectiveRValue": round(rim_joist_rval, 2),
             },
             "extension": {"H2kLabel": f"{floor_header_label}"},
         }

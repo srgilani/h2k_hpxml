@@ -67,7 +67,7 @@ def get_floors(h2k_dict, model_data={}):
             "InteriorFinish": {"Type": "none"},  # default for non-ceiling floors
             "Insulation": {
                 "SystemIdentifier": {"@id": f"{floor_id}Insulation"},
-                "AssemblyEffectiveRValue": floor_rval,
+                "AssemblyEffectiveRValue": round(floor_rval, 2),
             },
             "extension": {"H2kLabel": f"{floor_label}"},
         }

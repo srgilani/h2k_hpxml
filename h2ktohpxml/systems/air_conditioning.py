@@ -24,7 +24,7 @@ def get_air_conditioning(h2k_dict, model_data):
     ac_cooling_eff = h2k.get_number_field(type2_data, "ac_cooling_efficiency")
     ac_capacity = h2k.get_number_field(type2_data, "ac_capacity")
     is_auto_sized = (
-        "Calculated" == obj.get_val(type2_data, "Specifications,OutputCapacity,English")
+        "Calculated" == obj.get_val(type2_data, "Specifications,RatedCapacity,English")
         or ac_capacity == 0
     )
 
@@ -40,13 +40,14 @@ def get_air_conditioning(h2k_dict, model_data):
 
     if is_cooling_cop:
         # Cooling provided in COP=
-        ac_cooling_seer = (ac_cooling_eff + 1.428) / 0.115
+        ac_cooling_seer = (ac_cooling_eff - 1.428) / 0.115
     else:
         # Cooling provided in SEER
         # TODO: in v11.13, we can use the raw value here because they moved from SEER to EER=
         ac_cooling_seer = ac_cooling_eff
 
     ac_dict = {}
+
     if type2_type == "AirConditioning":
         ac_dict = {
             "SystemIdentifier": {"@id": model_data.get_system_id("air_conditioning")},
