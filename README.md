@@ -23,7 +23,7 @@ The timeline is as follows:
 | Phase | Description | Target Completion Date | Status |  |
 |---|---|---|---|---|
 | 1 | Loads Translations. This includes schedules, occupancy, plug loads, envelope charecteristics & climate file mapping. Default fixed HVAC  |Summer 2024| Completed & available for use. Presentation comparing results available [here](docs/H2k-HPXML-20240214-V2.pdf)|
-| 2 | HVAC Systems. This includes all systems and fuel types.|Spring 2025|Underway|
+| 2 | HVAC Systems. This includes all systems and fuel types.|Spring 2025| Completed - Beta Testing. Report and presentation comparing results available [here](docs/H2k-HPXML-Systems-Report.pdf) and [here](docs/H2k-HPXML-EPlus-Systems-Update-20250326.pdf)|
 | 3 | Multi-Urban Residential Buildings | TBD | Not Started |
 
 Here is a [list](docs/status.md) of the current completed sections related to the HPXML standard. This is a list of the assumptions and issues that were found in the translation work.
