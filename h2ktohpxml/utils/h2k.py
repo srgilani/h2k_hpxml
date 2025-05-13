@@ -7,14 +7,16 @@ from operator import itemgetter
 from . import obj
 from . import units
 
-config_folder = os.path.join(os.path.dirname(__file__),"..","config")
-with open(os.path.join(config_folder,"selection.json"), "r", encoding="utf-8") as f:
+config_folder = os.path.join(os.path.dirname(__file__), "..", "config")
+with open(os.path.join(config_folder, "selection.json"), "r", encoding="utf-8") as f:
     selection_config = json.load(f)
 
-with open(os.path.join(config_folder,"numeric.json"), "r", encoding="utf-8") as f:
+with open(os.path.join(config_folder, "numeric.json"), "r", encoding="utf-8") as f:
     numeric_config = json.load(f)
 
-with open(os.path.join(config_folder,"foundationconfig.json"), "r", encoding="utf-8") as f:
+with open(
+    os.path.join(config_folder, "foundationconfig.json"), "r", encoding="utf-8"
+) as f:
     foundation_config = json.load(f)
 
 
@@ -66,7 +68,8 @@ def get_number_field(h2k_dict={}, field_key=""):
 
 
 def get_composite_rval(composite_dict, wall_core="C"):
-    # wall_core = 0.116 RSI for concrete, 0.417 RSI for wood
+    # wall_core = 0.116 RSI for concrete, 0.417 RSI for wood, which is subtracted before the effective R-value is returned
+    # this calculation aligns with h2k's calculation method
     wall_core_rval = 0.116 * 5.678 if wall_core == "C" else 0.417 * 5.678
     rval = 0
 

@@ -9,7 +9,7 @@ Outputs: hpxml string
 import xmltodict
 import os
 
-from .utils import h2k, obj, weather
+from .utils import h2k, obj, weather, hot_water_usage
 
 from .enclosure.walls import get_walls, get_attached_walls
 from .enclosure.floors import get_floors
@@ -21,6 +21,8 @@ from .enclosure.infiltration import get_infiltration
 from .baseloads.appliances import get_appliances
 from .baseloads.lighting import get_lighting
 from .baseloads.miscloads import get_plug_loads
+from .systems.systems import get_systems
+from .program_mode.ashrae140 import apply_ashrae_140
 
 from . import Model
 
@@ -32,10 +34,10 @@ def h2ktohpxml(h2k_string="", config={}):
         "add_test_wall", False
     )  # To add a test adiabatic wall to check impact on loads
 
+    translation_mode = config.get("translation_mode", "SOC")
+    print("Translation Mode: \t\t", translation_mode)
     # ================ 1. Load template HPXML file ================
-    base_hpxml_path = os.path.join(
-        os.path.dirname(__file__), "templates", "base.xml"
-    )
+    base_hpxml_path = os.path.join(os.path.dirname(__file__), "templates", "base.xml")
     with open(base_hpxml_path, "r", encoding="utf-8") as f:
         base_hpxml = f.read()
 
@@ -47,6 +49,10 @@ def h2ktohpxml(h2k_string="", config={}):
     # print(hpxml_dict["HPXML"].keys())
 
     model_data = Model.ModelData()
+
+    model_data.set_results(h2k_dict)
+
+    results = model_data.get_results("")
 
     # ================ 2. HPXML Section: Software Info ================
 
@@ -113,24 +119,25 @@ def h2ktohpxml(h2k_string="", config={}):
 
     # /HPXML/Building/BuildingDetails/BuildingSummary/BuildingOccupancy
     # HPXML's default occupant schedules are not altered at this stage
+    # num_occupants = (
+    #     int(
+    #         obj.get_val(
+    #             h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Adults,@occupants"
+    #         )
+    #     )
+    #     + int(
+    #         obj.get_val(
+    #             h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Children,@occupants"
+    #         )
+    #     )
+    #     + int(
+    #         obj.get_val(
+    #             h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Infants,@occupants"
+    #         )
+    #     )
+    # )
 
-    num_occupants = (
-        int(
-            obj.get_val(
-                h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Adults,@occupants"
-            )
-        )
-        + int(
-            obj.get_val(
-                h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Children,@occupants"
-            )
-        )
-        + int(
-            obj.get_val(
-                h2k_dict, "HouseFile,House,BaseLoads,Occupancy,Infants,@occupants"
-            )
-        )
-    )
+    num_occupants = 3  # SOC Hardcoded
 
     hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["BuildingSummary"][
         "BuildingOccupancy"
@@ -149,7 +156,7 @@ def h2ktohpxml(h2k_string="", config={}):
 
     # ResidentialFacilityType
     res_facility_type = h2k.get_selection_field(h2k_dict, "res_facility_type")
-    print("res_facility_type", res_facility_type)
+    print("Residential Facility Type: \t", res_facility_type)
     model_data.set_building_details({"res_facility_type": res_facility_type})
     building_const_dict["ResidentialFacilityType"] = res_facility_type
 
@@ -174,6 +181,11 @@ def h2ktohpxml(h2k_string="", config={}):
     # NumberofBedrooms
     num_bedrooms = h2k.get_number_field(h2k_dict, "num_bedrooms")
     building_const_dict["NumberofBedrooms"] = num_bedrooms
+    model_data.set_building_details(
+        {
+            "num_bedrooms": num_bedrooms,
+        }
+    )
 
     # NumberofBathrooms
     num_bathrooms = h2k.get_number_field(h2k_dict, "num_bathrooms")
@@ -192,25 +204,49 @@ def h2ktohpxml(h2k_string="", config={}):
     house_volume = h2k.get_number_field(h2k_dict, "house_volume")
     building_const_dict["ConditionedBuildingVolume"] = house_volume
 
+    # Natural Ventilation
+    # Handled in template (0 days/week)
+
     # ================ 6. HPXML Section: Climate Zones ================
     # /HPXML/Building/BuildingDetails/ClimateandRiskZones/WeatherStation
     weather_dict = hpxml_dict["HPXML"]["Building"]["BuildingDetails"][
         "ClimateandRiskZones"
     ]["WeatherStation"]
 
-    cwec_file = weather.get_cwec_file(
-        obj.get_val(h2k_dict, "HouseFile,ProgramInformation,Weather,Region,English"),
+    # Get the weather file
+    if translation_mode == "ASHRAE140":
+        # Selects one of the two ashrae140 weather files:
+        # USA_CO_Colorado.Springs-Peterson.Field.724660_TMY3
+        # USA_NV_Las.Vegas-McCarran.Intl.AP.723860_TMY3
+        weather_location = obj.get_val(
+            h2k_dict, "HouseFile,ProgramInformation,Weather,Location,English"
+        )
+
+        if weather_location == "Lasvega":
+            weather_file = "USA_NV_Las.Vegas-McCarran.Intl.AP.723860_TMY3"
+        else:
+            weather_file = "USA_CO_Colorado.Springs-Peterson.Field.724660_TMY3"
+
+    else:
+        # Grabs the CWEC weather file
+        weather_file = weather.get_cwec_file(
+            obj.get_val(
+                h2k_dict, "HouseFile,ProgramInformation,Weather,Region,English"
+            ),
+            obj.get_val(
+                h2k_dict, "HouseFile,ProgramInformation,Weather,Location,English"
+            ),
+        )
+
+    print(
+        "HOT2000 Weather Location: \t",
         obj.get_val(h2k_dict, "HouseFile,ProgramInformation,Weather,Location,English"),
     )
 
-    print(
-        obj.get_val(h2k_dict, "HouseFile,ProgramInformation,Weather,Location,English")
-    )
+    # print(weather_file)
 
-    print(cwec_file)
-
-    weather_dict["Name"] = cwec_file
-    weather_dict["extension"]["EPWFilePath"] = f"{cwec_file}.epw"
+    weather_dict["Name"] = weather_file
+    weather_dict["extension"]["EPWFilePath"] = f"{weather_file}.epw"
 
     # ================ 7. HPXML Section: Enclosure ================
     walls = []
@@ -314,14 +350,54 @@ def h2ktohpxml(h2k_string="", config={}):
         ag_heated_floor_area + bg_heated_floor_area
     )
 
-    print("heated floor area", building_const_dict["ConditionedFloorArea"])
+    print("Heated Floor Area (ft2): \t", building_const_dict["ConditionedFloorArea"])
 
-    # ================ 8. HPXML Section: Systems (OUT OF SCOPE) ================
+    # ================ 8. HPXML Section: Systems ================
+    # Run appliances first so we know hot water consumption
+    appliance_result = get_appliances(h2k_dict, model_data)
+
+    systems_results = get_systems(h2k_dict, model_data)
+    hvac_dict = systems_results["hvac_dict"]
+    dhw_dict = systems_results["dhw_dict"]
+    mech_vent_dict = systems_results["mech_vent_dict"]
+    solar_dhw_dict = systems_results["solar_dhw_dict"]
+    generation_dict = systems_results["generation_dict"]
+
+    # Calculate hot water fixture multiplier
+    fixtures_multiplier = hot_water_usage.get_fixtures_multiplier(h2k_dict, model_data)
+
+    hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Systems"] = {
+        **({"HVAC": hvac_dict} if model_data.get_is_hvac_translated() else {}),
+        **({"MechanicalVentilation": mech_vent_dict} if mech_vent_dict != {} else {}),
+        **(
+            {
+                "WaterHeating": {
+                    **dhw_dict,
+                    "extension": {"WaterFixturesUsageMultiplier": fixtures_multiplier},
+                }
+            }
+            if dhw_dict != {}
+            else {}
+        ),
+        **({"SolarThermal": solar_dhw_dict} if solar_dhw_dict != {} else {}),
+        **({"Photovoltaics": generation_dict} if generation_dict != {} else {}),
+    }
+
+    # Specify presence of flues if any have been detected while processing systems
+    hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Enclosure"][
+        "AirInfiltration"
+    ] = {
+        **hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Enclosure"][
+            "AirInfiltration"
+        ],
+        "extension": {
+            "HasFlueOrChimneyInConditionedSpace": len(model_data.get_flue_diameters())
+            > 0
+        },
+    }
 
     # ================ 9. HPXML Section: Appliances ================
-    hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Appliances"] = get_appliances(
-        h2k_dict, model_data
-    )
+    hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["Appliances"] = appliance_result
 
     # ================ 10. HPXML Section: Lighting & Ceiling Fans ================
 
@@ -336,6 +412,10 @@ def h2ktohpxml(h2k_string="", config={}):
     hpxml_dict["HPXML"]["Building"]["BuildingDetails"]["MiscLoads"] = get_plug_loads(
         h2k_dict, model_data
     )
+
+    # ================ Apply overall translation mode specifications ================
+    if translation_mode == "ASHRAE140":
+        hpxml_dict = apply_ashrae_140(hpxml_dict, h2k_dict, model_data)
 
     # Done!
     return xmltodict.unparse(

@@ -65,6 +65,12 @@ def get_crawlspaces(h2k_dict, model_data={}):
             "outside" if is_open_crawlspace else "crawlspace - conditioned"
         )
 
+        model_data.set_building_details(
+            {
+                "crawlspace_location": interior_adjacent,
+            }
+        )
+
         # Get required details from h2k crawlspace
         is_crawlspace_rectangular = h2k.get_selection_field(
             crawlspace, "foundation_rectangular"
@@ -101,7 +107,7 @@ def get_crawlspaces(h2k_dict, model_data={}):
             {
                 "type": "crawlspace",
                 "total_perimeter": foundation_tot_perimeter,
-                "total_area": foundation_tot_area,
+                "total_area": 0 if is_open_crawlspace else foundation_tot_area,
                 "exposed_perimeter": crawlspace_exp_perimeter,
                 "exposed_fraction": crawlspace_exp_perimeter / foundation_tot_perimeter,
             }
@@ -184,7 +190,7 @@ def get_crawlspaces(h2k_dict, model_data={}):
                 "InteriorFinish": {"Type": "gypsum board"},  # default
                 "Insulation": {
                     "SystemIdentifier": {"@id": f"{foundation_wall_id}Insulation"},
-                    "AssemblyEffectiveRValue": crwl_wall_rval,
+                    "AssemblyEffectiveRValue": round(crwl_wall_rval, 2),
                     # "Layer": [
                     #     {
                     #         "InstallationType": "continuous - exterior",
@@ -250,13 +256,13 @@ def get_crawlspaces(h2k_dict, model_data={}):
             "SystemIdentifier": {"@id": floor_id},
             "ExteriorAdjacentTo": interior_adjacent,  # interior relative to crawlspace walls
             "InteriorAdjacentTo": "conditioned space",  # the home
+            "FloorOrCeiling": "floor",
             "FloorType": {"WoodFrame": None},  # for now, always WoodStud
-            # "FloorOrCeiling": "floor",
             "Area": foundation_tot_area,  # [ft2]
             "InteriorFinish": {"Type": "none"},  # default for non-ceiling floors
             "Insulation": {
                 "SystemIdentifier": {"@id": f"{floor_id}Insulation"},
-                "AssemblyEffectiveRValue": floors_above_rval,
+                "AssemblyEffectiveRValue": round(floors_above_rval, 2),
             },
             "extension": {"H2kLabel": f"{crawlspace_label}"},
         }

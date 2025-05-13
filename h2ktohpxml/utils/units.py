@@ -95,6 +95,78 @@ unit_map = {
         "L/s": {"cfm": {"scale": 2.118882, "offset": 0}},
         "cfm": {"L/s": {"scale": 0.471946998, "offset": 0}},
     },
+    "power": {
+        "BTU/h": {
+            "W": {"scale": 0.2930712104427134, "offset": 0.0},
+            "kW": {"scale": 0.0002930712104427134, "offset": 0.0},
+        },
+        "kW": {
+            "BTU/h": {"scale": 3412.14, "offset": 0.0},
+            "W": {"scale": 1000.0, "offset": 0.0},
+        },
+        "W": {
+            "BTU/h": {"scale": 3.41214, "offset": 0.0},
+            "kW": {"scale": 0.001, "offset": 0.0},
+        },
+    },
+    "fraction": {
+        "%": {"fraction": {"scale": 0.01, "offset": 0.0}},
+        "fraction": {"%": {"scale": 100.0, "offset": 0.0}},
+    },
+    "temperature": {
+        "F": {"C": {"scale": 0.5555555555555556, "offset": -17.77777777777778}},
+        "C": {"F": {"scale": 1.8, "offset": 32.0}},
+    },
+    "daily_energy": {
+        "MJ/day": {"BTU/h": {"scale": 39.4924, "offset": 0}},
+        "BTU/h": {"MJ/day": {"scale": 0.025321328, "offset": 0}},
+    },
+    "liquid_flow_rate": {
+        "L/min": {
+            "gpm_us": {"scale": 0.264172, "offset": 0},
+            "gpm_imp": {"scale": 0.219969, "offset": 0},
+        },
+        "gpm_us": {
+            "L/min": {"scale": 3.78541, "offset": 0},
+            "gpm_imp": {"scale": 0.832674, "offset": 0},
+        },
+        "gpm_imp": {
+            "L/min": {"scale": 4.54609, "offset": 0},
+            "gpm_us": {"scale": 1.20095, "offset": 0},
+        },
+    },
+    "time": {
+        "y": {
+            "d": {"scale": 365.0, "offset": 0.0},
+            "s": {"scale": 31536000.0, "offset": 0.0},
+            "min": {"scale": 525600.0, "offset": 0.0},
+            "h": {"scale": 8760.0, "offset": 0.0},
+        },
+        "s": {
+            "y": {"scale": 3.1709791983764586e-8, "offset": 0.0},
+            "min": {"scale": 0.016666666666666666, "offset": 0.0},
+            "h": {"scale": 0.0002777777777777778, "offset": 0.0},
+            "d": {"scale": 1.1574074074074073e-5, "offset": 0.0},
+        },
+        "min": {
+            "y": {"scale": 1.902587519025875e-6, "offset": 0.0},
+            "s": {"scale": 60.0, "offset": 0.0},
+            "h": {"scale": 0.016666666666666666, "offset": 0.0},
+            "d": {"scale": 0.0006944444444444445, "offset": 0.0},
+        },
+        "h": {
+            "y": {"scale": 0.00011415525114155251, "offset": 0.0},
+            "s": {"scale": 3600.0, "offset": 0.0},
+            "min": {"scale": 60.0, "offset": 0.0},
+            "d": {"scale": 0.041666666666666664, "offset": 0.0},
+        },
+        "d": {
+            "y": {"scale": 0.0027397260273972603, "offset": 0.0},
+            "s": {"scale": 86400.0, "offset": 0.0},
+            "min": {"scale": 1440.0, "offset": 0.0},
+            "h": {"scale": 24.0, "offset": 0.0},
+        },
+    },
 }
 
 

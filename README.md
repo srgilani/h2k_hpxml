@@ -20,14 +20,13 @@ The overall goal of this project is to have full support of all H2K features tra
 
 The timeline is as follows: 
 
-| Phase | Description | Target OS SDK |Target Completion Date | Status |
-|-------|-------------|---------------|-----------------------|--------|
-| 1 | Loads Translations. This includes schedules, occupancy, plug loads, envelope charecteristics & climate file mapping. Default fixed HVAC | 3.7.0 |Summer 2024| Completed & available for use. Presentation comparing results available [here](docs/H2k-HPXML-20240214-V2.pdf)|
-| 2 | HVAC Systems. This includes all systems and fuel types.| 3.9.0 |Spring 2025|Underway|
-| 3 | Multi-Urban Residential Buildings | TBD |TBD | Not Started |
+| Phase | Description | Target Completion Date | Status |  |
+|---|---|---|---|---|
+| 1 | Loads Translations. This includes schedules, occupancy, plug loads, envelope charecteristics & climate file mapping. Default fixed HVAC  |Summer 2024| Completed & available for use. Presentation comparing results available [here](docs/H2k-HPXML-20240214-V2.pdf)|
+| 2 | HVAC Systems. This includes all systems and fuel types.|Spring 2025| Completed - Beta Testing. Report and presentation comparing results available [here](docs/H2k-HPXML-Systems-Report.pdf) and [here](docs/H2k-HPXML-EPlus-Systems-Update-20250326.pdf)|
+| 3 | Multi-Urban Residential Buildings | TBD | Not Started |
 
 **Note**: Versioning of components targeted for each OS SDK is kept [here](https://github.com/canmet-energy/model-dev-container/blob/main/versioning.md). This will keep the development and results consistent across development as we upgrade components.
-
 
 Here is a [list](docs/status.md) of the current completed sections related to the HPXML standard. This is a list of the assumptions and issues that were found in the translation work.
 

@@ -9,6 +9,15 @@ from ..utils import obj, h2k
 def get_ceilings(h2k_dict, model_data={}):
     components = obj.get_val(h2k_dict, "HouseFile,House,Components")
 
+    roof_cavity_inputs = (
+        h2k_dict.get("HouseFile", {})
+        .get("House", {})
+        .get("Specifications", {})
+        .get("RoofCavity", {})
+    )
+
+    has_roof_cavity_inputs = roof_cavity_inputs != {}
+
     if "Ceiling" not in components.keys():
         h2k_ceilings = []
     else:
@@ -30,6 +39,8 @@ def get_ceilings(h2k_dict, model_data={}):
     for ceiling in h2k_ceilings:
         construction_type = obj.get_val(ceiling, "Construction,Type,English")
         ceiling_label = ceiling.get("Label", "No Label")
+
+        skylight_attachment = {}
 
         if construction_type.lower() == "attic/gable":
             # attic/gable => Floor (ceiling), 2x gable end walls, roof, attic (AtticType = Attic)
@@ -73,23 +84,43 @@ def get_ceilings(h2k_dict, model_data={}):
 
             # Rvalues
             ceiling_rval = h2k.get_number_field(ceiling, "ceiling_r_value")
-            gable_wall_rval = (5.678 * (0.083 + 0.11),)  # default in h2k
-            roof_rval = (5.678 * (0.111 + 0.078),)  # default in h2k
+            gable_wall_rval = 5.678 * (0.083 + 0.11)  # default in h2k
+            roof_rval = 5.678 * (0.111 + 0.078)  # default in h2k
+            if has_roof_cavity_inputs:
+                sloped_roof_sheathing_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "sloped_roof_sheathing_r_value"
+                )
+                sloped_roof_material_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "sloped_roof_material_r_value"
+                )
+                gable_ends_sheathing_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "gable_ends_sheathing_r_value"
+                )
+                gable_ends_exterior_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "gable_ends_exterior_r_value"
+                )
+
+                gable_wall_rval = (
+                    gable_ends_sheathing_r_value + gable_ends_exterior_r_value
+                )
+                roof_rval = sloped_roof_sheathing_r_value + sloped_roof_material_r_value
 
             # Horizontal ceiling surface, modelled as a Floor in HPXML
             new_floor = {
                 "SystemIdentifier": {"@id": floor_id},
                 "ExteriorAdjacentTo": "attic - vented",  # always for this type of floor as a ceiling
                 "InteriorAdjacentTo": "conditioned space",  # always
+                "FloorOrCeiling": "ceiling",
                 "FloorType": {"WoodFrame": None},  # for now, always WoodFrame
-                # "FloorOrCeiling": "ceiling",
                 "Area": ceiling_area,  # [ft2]
                 "InteriorFinish": {
                     "Type": "gypsum board"
                 },  # default for ceiling floors
                 "Insulation": {
                     "SystemIdentifier": {"@id": f"{floor_id}Insulation"},
-                    "AssemblyEffectiveRValue": ceiling_rval,  # Ceiling r-value applied here
+                    "AssemblyEffectiveRValue": round(
+                        ceiling_rval, 2
+                    ),  # Ceiling r-value applied here
                 },
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
@@ -98,15 +129,15 @@ def get_ceilings(h2k_dict, model_data={}):
                 "SystemIdentifier": {"@id": wall_id},
                 "ExteriorAdjacentTo": "outside",
                 "InteriorAdjacentTo": "attic - vented",  # always
+                "AtticWallType": "gable",
                 "WallType": {"WoodStud": None},  # for now, always WoodStud
-                # "AtticWallType": "gable",
                 "Area": tot_gable_wall_area,  # [ft2]
                 "Siding": "wood siding",  # for now, always wood siding
                 "SolarAbsorptance": wall_absorptance,
                 "Emittance": "0.9",  # Default
                 "Insulation": {
                     "SystemIdentifier": {"@id": f"{wall_id}Insulation"},
-                    "AssemblyEffectiveRValue": gable_wall_rval,
+                    "AssemblyEffectiveRValue": round(gable_wall_rval, 2),
                 },
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
@@ -122,7 +153,7 @@ def get_ceilings(h2k_dict, model_data={}):
                 "RadiantBarrier": "false",  # Default
                 "Insulation": {
                     "SystemIdentifier": {"@id": f"{roof_id}Insulation"},
-                    "AssemblyEffectiveRValue": roof_rval,
+                    "AssemblyEffectiveRValue": round(roof_rval, 2),
                 },
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
@@ -132,11 +163,17 @@ def get_ceilings(h2k_dict, model_data={}):
                 "AtticType": {
                     "Attic": {"Vented": "true"},
                 },
-                "WithinInfiltrationVolume": "false",
+                # "WithinInfiltrationVolume": "false",
+                "VentilationRate": {"UnitofMeasure": "ACHnatural", "Value": 2.4},
                 "AttachedToRoof": {"@idref": roof_id},
                 "AttachedToWall": {"@idref": wall_id},
                 "AttachedToFloor": {"@idref": floor_id},
                 "extension": {"H2kLabel": f"{ceiling_label}"},
+            }
+
+            skylight_attachment = {
+                "AttachedToRoof": {"@idref": roof_id},
+                "AttachedToFloor": {"@idref": floor_id},
             }
 
             hpxml_attics = [*hpxml_attics, new_attic]
@@ -197,22 +234,42 @@ def get_ceilings(h2k_dict, model_data={}):
 
             # Rvalues
             ceiling_rval = h2k.get_number_field(ceiling, "ceiling_r_value")
-            roof_rval = (5.678 * (0.111 + 0.078),)  # default in h2k
+            roof_rval = 5.678 * (0.111 + 0.078)  # default in h2k
+            if has_roof_cavity_inputs:
+                sloped_roof_sheathing_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "sloped_roof_sheathing_r_value"
+                )
+                sloped_roof_material_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "sloped_roof_material_r_value"
+                )
+                gable_ends_sheathing_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "gable_ends_sheathing_r_value"
+                )
+                gable_ends_exterior_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "gable_ends_exterior_r_value"
+                )
+
+                gable_wall_rval = (
+                    gable_ends_sheathing_r_value + gable_ends_exterior_r_value
+                )
+                roof_rval = sloped_roof_sheathing_r_value + sloped_roof_material_r_value
 
             # Horizontal ceiling surface, modelled as a Floor in HPXML
             new_floor = {
                 "SystemIdentifier": {"@id": floor_id},
                 "ExteriorAdjacentTo": "attic - vented",  # always for this type of floor as a ceiling
                 "InteriorAdjacentTo": "conditioned space",  # always
+                "FloorOrCeiling": "ceiling",
                 "FloorType": {"WoodFrame": None},  # for now, always WoodFrame
-                # "FloorOrCeiling": "ceiling",
                 "Area": ceiling_area,  # [ft2]
                 "InteriorFinish": {
                     "Type": "gypsum board"
                 },  # default for ceiling floors
                 "Insulation": {
                     "SystemIdentifier": {"@id": f"{floor_id}Insulation"},
-                    "AssemblyEffectiveRValue": ceiling_rval,  # Ceiling r-value applied here
+                    "AssemblyEffectiveRValue": round(
+                        ceiling_rval, 2
+                    ),  # Ceiling r-value applied here
                 },
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
@@ -228,7 +285,7 @@ def get_ceilings(h2k_dict, model_data={}):
                 "RadiantBarrier": "false",  # Default
                 "Insulation": {
                     "SystemIdentifier": {"@id": f"{roof_id}Insulation"},
-                    "AssemblyEffectiveRValue": roof_rval,
+                    "AssemblyEffectiveRValue": round(roof_rval, 2),
                 },
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
@@ -238,10 +295,16 @@ def get_ceilings(h2k_dict, model_data={}):
                 "AtticType": {
                     "Attic": {"Vented": "true"},
                 },
-                "WithinInfiltrationVolume": "false",
+                # "WithinInfiltrationVolume": "false",
+                "VentilationRate": {"UnitofMeasure": "ACHnatural", "Value": 2.4},
                 "AttachedToRoof": {"@idref": roof_id},
                 "AttachedToFloor": {"@idref": floor_id},
                 "extension": {"H2kLabel": f"{ceiling_label}"},
+            }
+
+            skylight_attachment = {
+                "AttachedToRoof": {"@idref": roof_id},
+                "AttachedToFloor": {"@idref": floor_id},
             }
 
             hpxml_attics = [*hpxml_attics, new_attic]
@@ -268,6 +331,24 @@ def get_ceilings(h2k_dict, model_data={}):
             # Rvalues
             ceiling_rval = h2k.get_number_field(ceiling, "ceiling_r_value")
             roof_rval = 5.678 * (0.111 + 0.078)  # default in h2k
+            if has_roof_cavity_inputs:
+                sloped_roof_sheathing_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "sloped_roof_sheathing_r_value"
+                )
+                sloped_roof_material_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "sloped_roof_material_r_value"
+                )
+                gable_ends_sheathing_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "gable_ends_sheathing_r_value"
+                )
+                gable_ends_exterior_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "gable_ends_exterior_r_value"
+                )
+
+                gable_wall_rval = (
+                    gable_ends_sheathing_r_value + gable_ends_exterior_r_value
+                )
+                roof_rval = sloped_roof_sheathing_r_value + sloped_roof_material_r_value
 
             # Insulation here, because we have no "floor"
             new_roof = {
@@ -282,7 +363,7 @@ def get_ceilings(h2k_dict, model_data={}):
                 "RadiantBarrier": "false",  # Default
                 "Insulation": {
                     "SystemIdentifier": {"@id": f"{roof_id}Insulation"},
-                    "AssemblyEffectiveRValue": ceiling_rval + roof_rval,
+                    "AssemblyEffectiveRValue": round(ceiling_rval + roof_rval, 2),
                 },
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
@@ -294,6 +375,10 @@ def get_ceilings(h2k_dict, model_data={}):
                 },
                 "AttachedToRoof": {"@idref": roof_id},
                 "extension": {"H2kLabel": f"{ceiling_label}"},
+            }
+
+            skylight_attachment = {
+                "AttachedToRoof": {"@idref": roof_id},
             }
 
             hpxml_attics = [*hpxml_attics, new_attic]
@@ -316,6 +401,24 @@ def get_ceilings(h2k_dict, model_data={}):
             # Rvalues
             ceiling_rval = h2k.get_number_field(ceiling, "ceiling_r_value")
             roof_rval = 5.678 * (0.111 + 0.078)  # default in h2k
+            if has_roof_cavity_inputs:
+                sloped_roof_sheathing_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "sloped_roof_sheathing_r_value"
+                )
+                sloped_roof_material_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "sloped_roof_material_r_value"
+                )
+                gable_ends_sheathing_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "gable_ends_sheathing_r_value"
+                )
+                gable_ends_exterior_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "gable_ends_exterior_r_value"
+                )
+
+                gable_wall_rval = (
+                    gable_ends_sheathing_r_value + gable_ends_exterior_r_value
+                )
+                roof_rval = sloped_roof_sheathing_r_value + sloped_roof_material_r_value
 
             # Insulation here, because we have no "floor"
             new_roof = {
@@ -330,7 +433,7 @@ def get_ceilings(h2k_dict, model_data={}):
                 "RadiantBarrier": "false",  # Default
                 "Insulation": {
                     "SystemIdentifier": {"@id": f"{roof_id}Insulation"},
-                    "AssemblyEffectiveRValue": ceiling_rval + roof_rval,
+                    "AssemblyEffectiveRValue": round(ceiling_rval + roof_rval, 2),
                 },
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
@@ -342,6 +445,10 @@ def get_ceilings(h2k_dict, model_data={}):
                 },
                 "AttachedToRoof": {"@idref": roof_id},
                 "extension": {"H2kLabel": f"{ceiling_label}"},
+            }
+
+            skylight_attachment = {
+                "AttachedToRoof": {"@idref": roof_id},
             }
 
             hpxml_attics = [*hpxml_attics, new_attic]
@@ -404,23 +511,43 @@ def get_ceilings(h2k_dict, model_data={}):
 
             # Rvalues
             ceiling_rval = h2k.get_number_field(ceiling, "ceiling_r_value")
-            gable_wall_rval = (5.678 * (0.083 + 0.11),)  # default in h2k
-            roof_rval = (5.678 * (0.111 + 0.078),)  # default in h2k
+            gable_wall_rval = 5.678 * (0.083 + 0.11)  # default in h2k
+            roof_rval = 5.678 * (0.111 + 0.078)  # default in h2k
+            if has_roof_cavity_inputs:
+                sloped_roof_sheathing_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "sloped_roof_sheathing_r_value"
+                )
+                sloped_roof_material_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "sloped_roof_material_r_value"
+                )
+                gable_ends_sheathing_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "gable_ends_sheathing_r_value"
+                )
+                gable_ends_exterior_r_value = h2k.get_number_field(
+                    roof_cavity_inputs, "gable_ends_exterior_r_value"
+                )
+
+                gable_wall_rval = (
+                    gable_ends_sheathing_r_value + gable_ends_exterior_r_value
+                )
+                roof_rval = sloped_roof_sheathing_r_value + sloped_roof_material_r_value
 
             # Horizontal ceiling surface, modelled as a Floor in HPXML
             new_floor = {
                 "SystemIdentifier": {"@id": floor_id},
                 "ExteriorAdjacentTo": "attic - vented",  # always for this type of floor as a ceiling
                 "InteriorAdjacentTo": "conditioned space",  # always
+                "FloorOrCeiling": "ceiling",
                 "FloorType": {"WoodFrame": None},  # for now, always WoodFrame
-                # "FloorOrCeiling": "ceiling",
                 "Area": sloped_ceiling_area,  # [ft2]
                 "InteriorFinish": {
                     "Type": "gypsum board"
                 },  # default for ceiling floors
                 "Insulation": {
                     "SystemIdentifier": {"@id": f"{floor_id}Insulation"},
-                    "AssemblyEffectiveRValue": ceiling_rval,  # Ceiling r-value applied here
+                    "AssemblyEffectiveRValue": round(
+                        ceiling_rval, 2
+                    ),  # Ceiling r-value applied here
                 },
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
@@ -429,15 +556,15 @@ def get_ceilings(h2k_dict, model_data={}):
                 "SystemIdentifier": {"@id": wall_id},
                 "ExteriorAdjacentTo": "outside",
                 "InteriorAdjacentTo": "attic - vented",  # always
+                "AtticWallType": "gable",
                 "WallType": {"WoodStud": None},  # for now, always WoodStud
-                # "AtticWallType": "gable",
                 "Area": tot_gable_wall_area,  # [ft2]
                 "Siding": "wood siding",  # for now, always wood siding
                 "SolarAbsorptance": wall_absorptance,
                 "Emittance": "0.9",  # Default
                 "Insulation": {
                     "SystemIdentifier": {"@id": f"{wall_id}Insulation"},
-                    "AssemblyEffectiveRValue": gable_wall_rval,
+                    "AssemblyEffectiveRValue": round(gable_wall_rval, 2),
                 },
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
@@ -453,7 +580,7 @@ def get_ceilings(h2k_dict, model_data={}):
                 "RadiantBarrier": "false",  # Default
                 "Insulation": {
                     "SystemIdentifier": {"@id": f"{roof_id}Insulation"},
-                    "AssemblyEffectiveRValue": roof_rval,
+                    "AssemblyEffectiveRValue": round(roof_rval, 2),
                 },
                 "extension": {"H2kLabel": f"{ceiling_label}"},
             }
@@ -463,11 +590,17 @@ def get_ceilings(h2k_dict, model_data={}):
                 "AtticType": {
                     "Attic": {"Vented": "true"},
                 },
-                "WithinInfiltrationVolume": "false",
+                # "WithinInfiltrationVolume": "false",
+                "VentilationRate": {"UnitofMeasure": "ACHnatural", "Value": 2.4},
                 "AttachedToRoof": {"@idref": roof_id},
                 "AttachedToWall": {"@idref": wall_id},
                 "AttachedToFloor": {"@idref": floor_id},
                 "extension": {"H2kLabel": f"{ceiling_label}"},
+            }
+
+            skylight_attachment = {
+                "AttachedToRoof": {"@idref": roof_id},
+                "AttachedToFloor": {"@idref": floor_id},
             }
 
             hpxml_attics = [*hpxml_attics, new_attic]
@@ -483,7 +616,7 @@ def get_ceilings(h2k_dict, model_data={}):
         h2k_windows = ceiling.get("Components", {}).get("Window", {})
 
         # Windows
-        window_output = get_skylights(h2k_windows, model_data)
+        window_output = get_skylights(h2k_windows, skylight_attachment, model_data)
         hpxml_skylights = [*hpxml_skylights, *window_output["hpxml_skylights"]]
 
     return {

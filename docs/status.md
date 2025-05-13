@@ -6,7 +6,7 @@
 |Building Summary| (complete)|
 |Climate Zones| (complete)|
 |Enclosure| (complete)|
-|Systems| (Spring 2025)|
+|Systems| (complete)|
 |Appliances| (complete)|
 |Lighting & Ceiling Fans| (complete)|
 |Pools & Permanent Spas|(complete)|

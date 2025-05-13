@@ -161,4 +161,8 @@ cython_debug/
 
 
 tests/files
-example/output
+examples/output
+h2k_files
+# Weather files
+*_CWEC2020.zip*
+

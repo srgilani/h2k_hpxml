@@ -80,24 +80,19 @@ def run(input_path,
     if sum(bool(x) for x in [hourly, monthly, timestep]) > 1:
         raise ValueError("Only one of the options --hourly, --monthly, or --timestep can be provided at a time.")
 
-    # Create string with all the flags
-    flags = ""
-    if add_component_loads:
-        flags += " --add-component-loads"
-    if debug:
-        flags += " --debug"
-    if output_format:
-        flags += f" --output-format {output_format}"
-    if timestep:
-        flags += " " + " ".join(f"--timestep {t}" for t in timestep)
-    if hourly:
-        flags += " " + " ".join(f"--hourly {h}" for h in hourly)
-    if monthly:
-        flags += " " + " ".join(f"--monthly {m}" for m in monthly)
-    if skip_validation:
-        flags += " --skip-validation"
-    if daily:
-        flags += " " + " ".join(f"--daily {d}" for d in daily)
+    # Refactor flag-building logic
+    flag_options = {
+        "--add-component-loads": add_component_loads,
+        "--debug": debug,
+        "--skip-validation": skip_validation,
+        "--output-format": output_format,
+    }
+    flags = " ".join(f"{key} {value}" if value else key for key, value in flag_options.items() if value)
+
+    # Add options that can be repeated
+    for option, values in [("--timestep", timestep), ("--hourly", hourly), ("--monthly", monthly), ("--daily", daily)]:
+        flags += " " + " ".join(f"{option} {v}" for v in values)
+
     if add_stochastic_schedules:
         flags += " --add-stochastic-schedules"
     if add_timeseries_output_variable:
