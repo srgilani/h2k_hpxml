@@ -12,6 +12,8 @@ from h2ktohpxml.h2ktohpxml import h2ktohpxml
 from colorama import Fore, Style
 import pyfiglet
 import random
+import traceback
+import re
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -135,14 +137,26 @@ def run(input_path,
     import concurrent.futures
     import time
 
+    def detect_xml_encoding(filepath):
+        with open(filepath, "rb") as f:
+            first_line = f.readline()
+            match = re.search(br'encoding=[\'"]([A-Za-z0-9_\-]+)[\'"]', first_line)
+            if match:
+                return match.group(1).decode("ascii")
+        return "utf-8"  # fallback
+
     # Define a function to process each file
     def process_file(filepath):
         try:
             print("================================================")
             print("Processing file:", filepath)
-            
-            # Read the content of the H2K file
-            with open(filepath, "r", encoding="utf-8") as f:
+
+            # Detect encoding from XML declaration
+            encoding = detect_xml_encoding(filepath)
+            print(f"Detected encoding for {filepath}: {encoding}")
+
+            # Read the content of the H2K file with detected encoding
+            with open(filepath, "r", encoding=encoding) as f:
                 h2k_string = f.read()
             
             # Convert the H2K content to HPXML format
@@ -190,10 +204,40 @@ def run(input_path,
                     return (filepath, "Success", "")
                 except subprocess.CalledProcessError as e:
                     print("Error during simulation:", e.stderr)
-                    return (filepath, "Failure", e.stderr)
+                    tb = traceback.format_exc()
+                    print(tb)
+
+                    # Save traceback to a separate error.txt file
+                    error_dir = os.path.join(dest_hpxml_path, pathlib.Path(filepath).stem)
+                    os.makedirs(error_dir, exist_ok=True)
+                    error_file_path = os.path.join(error_dir, "error.txt")
+                    with open(error_file_path, "w") as error_file:
+                        error_file.write(f"{e.stderr}\n{tb}")
+
+                    # Check for specific exception text and handle run.log
+                    if "returned non-zero exit status 1." in str(e):
+                        run_log_path = os.path.join(dest_hpxml_path, pathlib.Path(filepath).stem,"run", "run.log")
+                        if os.path.exists(run_log_path):
+                            with open(run_log_path, "r") as run_log_file:
+                                run_log_content = "**OS-HPXML ERROR**: " + run_log_file.read()
+                                return (filepath, "Failure", run_log_content)
+
+                    # Default behavior for other exceptions
+                    return (filepath, "Failure", str(e))
             else:
                 return (filepath, "Success", "")
         except Exception as e:
+            tb = traceback.format_exc()
+            print("Exception during processing:", tb)
+
+            # Save traceback to a separate error.txt file
+            error_dir = os.path.join(dest_hpxml_path, pathlib.Path(filepath).stem)
+            os.makedirs(error_dir, exist_ok=True)
+            error_file_path = os.path.join(error_dir, "error.txt")
+            with open(error_file_path, "w") as error_file:
+                error_file.write(f"{str(e)}\n{tb}")
+
+            # Return only the error summary for the CSV
             return (filepath, "Failure", str(e))
 
     # Use ThreadPoolExecutor to process files concurrently with a limited number of threads
@@ -202,13 +246,16 @@ def run(input_path,
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         results = list(executor.map(process_file, h2k_files))
 
-    # Write results to a CSV file
-    csv_path = os.path.join(dest_hpxml_path, "processing_results.csv")
-    with open(csv_path, "w", newline="") as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(["Filepath", "Status", "Error"])
-        csvwriter.writerows(results)
+    # Filter results for failures only
+    failure_results = [result for result in results if result[1] == "Failure"]
 
+    # Write failure results to a Markdown file
+    markdown_path = os.path.join(dest_hpxml_path, "processing_results.md")
+    with open(markdown_path, "w") as mdfile:
+        mdfile.write("| Filepath | Status | Error |\n")
+        mdfile.write("|----------|--------|-------|\n")
+        for result in failure_results:
+            mdfile.write(f"| {result[0]} | {result[1]} | {result[2]} |\n")
         
 if __name__ == '__main__':
     cli()
