@@ -75,8 +75,8 @@ https://github.com/canmet-energy/h2k_hpxml
 ### Bring up a terminal to execute commands. 
 1. Hit Ctrl-Shift-`  (that is a backtick, usually under the ~) to bring up a terminal. There are other ways to do this as well, such as the "Terminal Menu on the top or the "+" symbol to the right of the terminal on the bottom of vscode. You can now issue commands to the container.  
 
-### Install Certificates (NRCan Employees Only)
-Working at NRCan requires certificate to be installed in your container. Clone the cert repo with the command below. You need to request access from chris.kirney@nrcan.gc.ca 
+### Install Certificates (Only if working while connected to the NRCan network)
+Working from the NRCan network requires certificates to be installed in your container. Clone the cert repo with the command below. You need to request access from chris.kirney@nrcan.gc.ca 
 ```sh
 git clone https://github.com/canmet-energy/linux_nrcan_certs
 ```
