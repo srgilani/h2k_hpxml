@@ -187,7 +187,7 @@ def run(input_path,
                     f"/usr/local/bin/openstudio",
                     ruby_hpxml_path,
                     "-x",
-                    hpxml_path
+                    os.path.abspath(hpxml_path)
                 ]
                 
                 # Convert flags to a list of strings
