@@ -209,6 +209,56 @@ def run(input_path,
                         text=True
                     )
                     print("Simulation result:", result)
+                    #===============================================================================================
+                    #### THIS SECTION COPIES OUTPUT FILES TO THE OUTPUTS FOLDER #### START
+                    # Copy output files to the outputs folder
+                    model_name = pathlib.Path(filepath).stem
+                    outputs_folder = os.path.join(PROJECT_ROOT, "outputs", model_name)
+                    os.makedirs(outputs_folder, exist_ok=True)
+                    
+                    # Define the source directory where the simulation outputs are generated
+                    simulation_output_dir = os.path.join(dest_hpxml_path, model_name, "run")
+                    
+                    print(f"Looking for simulation outputs in: {simulation_output_dir}")
+                    print(f"Will copy files to: {outputs_folder}")
+                    
+                    # List of files to copy
+                    files_to_copy = [
+                        "eplusout.sql",
+                        "eplustbl.htm", 
+                        "in.idf",
+                        "in.osm",
+                        "results_annual.csv",
+                        "results_timeseries.csv"
+                    ]
+                    
+                    # Debug: List all files in the simulation output directory
+                    if os.path.exists(simulation_output_dir):
+                        print(f"Files found in {simulation_output_dir}:")
+                        for file in os.listdir(simulation_output_dir):
+                            print(f"  - {file}")
+                    else:
+                        print(f"Warning: Simulation output directory does not exist: {simulation_output_dir}")
+                    
+                    
+                    # Copy each file if it exists
+                    copied_files = []
+                    for filename in files_to_copy:
+                        source_file = os.path.join(simulation_output_dir, filename)
+                        if os.path.exists(source_file):
+                            destination_file = os.path.join(outputs_folder, filename)
+                            try:
+                                shutil.copy2(source_file, destination_file)
+                                copied_files.append(filename)
+                                print(f"Successfully copied {filename} to {outputs_folder}")
+                            except Exception as copy_error:
+                                print(f"Error copying {filename}: {copy_error}")
+                        else:
+                            print(f"Warning: {filename} not found in {simulation_output_dir}")
+                    
+                    print(f"Total files copied for {model_name}: {len(copied_files)}")
+                #### THIS SECTION COPIES OUTPUT FILES TO THE OUTPUTS FOLDER #### END
+                #===============================================================================================    
                     return (filepath, "Success", "")
                 except subprocess.CalledProcessError as e:
                     print("Error during simulation:", e.stderr)
