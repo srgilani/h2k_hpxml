@@ -14,6 +14,7 @@ import pyfiglet
 import random
 import traceback
 import re
+import pandas as pd
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -238,8 +239,7 @@ def run(input_path,
                         for file in os.listdir(simulation_output_dir):
                             print(f"  - {file}")
                     else:
-                        print(f"Warning: Simulation output directory does not exist: {simulation_output_dir}")
-                    
+                        print(f"Warning: Simulation output directory does not exist: {simulation_output_dir}")                    
                     
                     # Copy each file if it exists
                     copied_files = []
@@ -251,12 +251,27 @@ def run(input_path,
                                 shutil.copy2(source_file, destination_file)
                                 copied_files.append(filename)
                                 print(f"Successfully copied {filename} to {outputs_folder}")
+
+                                # Convert results_timeseries.csv to .parquet
+                                if filename == "results_timeseries.csv":
+                                    try:
+                                        df = pd.read_csv(os.path.join(outputs_folder, filename), dtype=str)
+                                        copied_files.append(filename.replace(".csv", ".parquet"))
+                                        parquet_file = os.path.join(outputs_folder, filename.replace(".csv", ".parquet"))
+                                        df.to_parquet(parquet_file, index=False, engine='pyarrow')
+                                        print(f"Successfully converted {filename} to parquet format")
+                                    except ImportError:
+                                        print("Warning: pandas not available, skipping parquet conversion")
+                                    except Exception as parquet_error:
+                                        print(f"Error converting {filename} to parquet: {parquet_error}")
+
                             except Exception as copy_error:
                                 print(f"Error copying {filename}: {copy_error}")
                         else:
                             print(f"Warning: {filename} not found in {simulation_output_dir}")
                     
                     print(f"Total files copied for {model_name}: {len(copied_files)}")
+
                 #### THIS SECTION COPIES OUTPUT FILES TO THE OUTPUTS FOLDER #### END
                 #===============================================================================================    
                     return (filepath, "Success", "")
