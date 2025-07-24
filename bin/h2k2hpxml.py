@@ -163,7 +163,12 @@ def run(input_path,
                 h2k_string = f.read()
             
             # Convert the H2K content to HPXML format
-            hpxml_string = h2ktohpxml(h2k_string)
+            # Pass the configuration to h2ktohpxml
+            conversion_config = {
+                'timestep': config.getint("nonh2k", "timestep"),
+                'operable_window_avail_days': config.getint("nonh2k", "operable_window_avail_days")
+            }
+            hpxml_string = h2ktohpxml(h2k_string, conversion_config)
             
             # Define the output path for the converted HPXML file
             hpxml_path = os.path.join(dest_hpxml_path, pathlib.Path(filepath).stem, pathlib.Path(filepath).stem + ".xml")

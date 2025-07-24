@@ -36,6 +36,11 @@ def h2ktohpxml(h2k_string="", config={}):
 
     translation_mode = config.get("translation_mode", "SOC")
     print("Translation Mode: \t\t", translation_mode)
+    
+    # Get timestep from config (defaults to 60 if not specified)
+    timestep = config.get("timestep", 60)
+    print("Simulation Timestep: \t\t", timestep)
+    
     # ================ 1. Load template HPXML file ================
     base_hpxml_path = os.path.join(os.path.dirname(__file__), "templates", "base.xml")
     with open(base_hpxml_path, "r", encoding="utf-8") as f:
@@ -47,6 +52,9 @@ def h2ktohpxml(h2k_string="", config={}):
 
     hpxml_dict = xmltodict.parse(base_hpxml)
     # print(hpxml_dict["HPXML"].keys())
+
+    # Update the timestep in the HPXML template with the config value
+    hpxml_dict["HPXML"]["SoftwareInfo"]["extension"]["SimulationControl"]["Timestep"] = str(timestep)
 
     model_data = Model.ModelData()
 
