@@ -225,11 +225,11 @@ def run(input_path,
                     
                     # List of files to copy
                     files_to_copy = [
-                        "eplusout.sql",
-                        "eplustbl.htm", 
-                        "in.idf",
-                        "in.osm",
-                        "results_annual.csv",
+                        # "eplusout.sql",
+                        # "eplustbl.htm", 
+                        # "in.idf",
+                        # "in.osm",
+                        # "results_annual.csv",
                         "results_timeseries.csv"
                     ]
                     
@@ -260,6 +260,12 @@ def run(input_path,
                                         parquet_file = os.path.join(outputs_folder, filename.replace(".csv", ".parquet"))
                                         df.to_parquet(parquet_file, index=False, engine='pyarrow')
                                         print(f"Successfully converted {filename} to parquet format")
+
+                                        # Delete the original CSV file after successful parquet creation
+                                        csv_file_path = os.path.join(outputs_folder, filename)
+                                        os.remove(csv_file_path)
+                                        print(f"Deleted original CSV file: {filename}")
+
                                     except ImportError:
                                         print("Warning: pandas not available, skipping parquet conversion")
                                     except Exception as parquet_error:
@@ -271,6 +277,14 @@ def run(input_path,
                             print(f"Warning: {filename} not found in {simulation_output_dir}")
                     
                     print(f"Total files copied for {model_name}: {len(copied_files)}")
+
+                    # Delete the simulation output directory after copying files
+                    try:
+                        if os.path.exists(simulation_output_dir):
+                            shutil.rmtree(simulation_output_dir)
+                            print(f"Deleted simulation output directory: {simulation_output_dir}")
+                    except Exception as delete_error:
+                        print(f"Error deleting simulation output directory: {delete_error}")
 
                 #### THIS SECTION COPIES OUTPUT FILES TO THE OUTPUTS FOLDER #### END
                 #===============================================================================================    
